@@ -11,13 +11,14 @@ import cv2
 img_w = 256
 img_h = 256
 
-
 """
 0_函数说明：
    只保留后缀为tif的图像
 """
+
+
 def process_0(path):
-    file_list = os.listdir(path) # 获取path目录下的所有文件
+    file_list = os.listdir(path)  # 获取path目录下的所有文件
     for file in file_list:
         file_path = os.path.join(path, file)  # 获取文件路径
         if os.path.isdir(file_path):  # 如果当前是文件夹，递归
@@ -33,9 +34,11 @@ def process_0(path):
     输入：图片路径
     输出：
 """
+
+
 def process_1(path):
     result = []
-    file_list = os.listdir(path) # 获取path目录下的所有文件
+    file_list = os.listdir(path)  # 获取path目录下的所有文件
     for file in file_list:
         file_name = file.split(".")[0]  # 获取文件的名称（用来保存统计信息）
         file_path = os.path.join(path, file)  # 获取文件路径
@@ -44,7 +47,7 @@ def process_1(path):
         else:
             file = tiff.imread(file_path)  # 读取图片
             chicu = file.shape[:2]  # 获取图片的尺寸
-            area = chicu[0] * chicu[1] # 获取图片的面积
+            area = chicu[0] * chicu[1]  # 获取图片的面积
             result.append((file_name, chicu, area))
     with open('统计_' + path.split('\\')[-2] + '.csv', 'a', newline='') as myfile:
         mywriter = csv.writer(myfile)
@@ -55,6 +58,8 @@ def process_1(path):
 2_函数说明：假定对象的最小尺寸要求不小于64*64
     1. 删除高或宽尺寸小于64的图片
 """
+
+
 def process_2(path):
     file_list = os.listdir(path)  # 获取path目录下的所有文件
     for file in file_list:
@@ -64,7 +69,7 @@ def process_2(path):
         else:
             file = tiff.imread(file_path)  # 读取图片
             chicu = file.shape[:2]  # 获取图片的尺寸
-            if chicu[0] < img_w or chicu[1] < img_h: # 1. 删除不符合要求的图片
+            if chicu[0] < img_w or chicu[1] < img_h:  # 1. 删除不符合要求的图片
                 os.remove(file_path)
 
 
@@ -72,13 +77,13 @@ def creat_dataset(image_num=50000, mode='original', path='', aug_path=''):
     if not os.path.exists(aug_path):
         os.mkdir(aug_path)
     file_list = os.listdir(path)  # 获取path目录下的所有文件
-    image_sets = [] # 统
+    image_sets = []  # 统
     dir_names = []
-    for file in file_list: # 该文件夹下的子文件夹（building,zhibei,water,other）
+    for file in file_list:  # 该文件夹下的子文件夹（building,zhibei,water,other）
         dir_names.append(file)
         image_sets.append(os.listdir(os.path.join(path, file)))
     # print(image_sets)
-    for i in range(len(image_sets)): # 每个文件夹下的文件
+    for i in range(len(image_sets)):  # 每个文件夹下的文件
         if not os.path.exists(aug_path + os.sep + dir_names[i]):
             os.mkdir(aug_path + os.sep + dir_names[i])
 
@@ -87,22 +92,22 @@ def creat_dataset(image_num=50000, mode='original', path='', aug_path=''):
         # print(image_each)
         g_count = 0
         for j in range(len(image_sets[i])):
-                count = 0
-                # print(image_sets[i][j])
-                img_path = path + os.sep + dir_names[i] + os.sep + image_sets[i][j]
-                print(img_path)
-                src_img = tiff.imread(img_path)
-                X_height, X_width, _ = src_img.shape
-                while count < image_each:
-                    random_width = random.randint(0, X_width - img_w - 1)
-                    random_height = random.randint(0, X_height - img_h - 1)
-                    src_roi = src_img[random_height: random_height + img_h, random_width: random_width + img_w, :]
-                    if mode == 'augment':
-                        src_roi = data_augment(src_roi)
-                    # print(aug_path + os.sep + dir_names[i])
-                    cv2.imwrite((aug_path + os.sep + dir_names[i] + '/%d.tif' % g_count), src_roi)
-                    count += 1
-                    g_count += 1
+            count = 0
+            # print(image_sets[i][j])
+            img_path = path + os.sep + dir_names[i] + os.sep + image_sets[i][j]
+            print(img_path)
+            src_img = tiff.imread(img_path)
+            X_height, X_width, _ = src_img.shape
+            while count < image_each:
+                random_width = random.randint(0, X_width - img_w - 1)
+                random_height = random.randint(0, X_height - img_h - 1)
+                src_roi = src_img[random_height: random_height + img_h, random_width: random_width + img_w, :]
+                if mode == 'augment':
+                    src_roi = data_augment(src_roi)
+                # print(aug_path + os.sep + dir_names[i])
+                cv2.imwrite((aug_path + os.sep + dir_names[i] + '/%d.tif' % g_count), src_roi)
+                count += 1
+                g_count += 1
 
 
 def gamma_transform(img, gamma):
@@ -160,7 +165,6 @@ def data_augment(xb):
 
 
 if __name__ == '__main__':
-
     """
     说明：
             1. 文件夹 2_process_2_64下：保存的是尺寸大于64的图像
@@ -184,8 +188,6 @@ if __name__ == '__main__':
     # process_1(path)
     # path = r'F:\remote_sensing\2015_4_class\arggis\2015_3\2_process_128'
     # process_2(path)
-
-
 
     # path = r"F:\remote_sensing\2015_4_class\arggis\2015_4\2_process"
     # process_0(path)
@@ -228,7 +230,6 @@ if __name__ == '__main__':
     #
     # path = r"F:\remote_sensing\2015_4_class\arggis\2015_1\2_process_128"
     # process_2(path)
-
 
     # path = r'F:\remote_sensing\2015_4_class\arggis\2015_5\2_process_256'
     # qianzhui = '5_'

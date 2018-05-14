@@ -22,7 +22,6 @@ from keras.utils import layer_utils
 
 matplotlib.use('Agg')
 import matplotlib.pyplot as plt
-from keras.applications
 
 # 指定GPU
 os.environ['CUDA_VISIBLE_DEVICES'] = '0'
@@ -45,7 +44,6 @@ base_dir = '/media/files/xdm/classification/'
 # model_dir = base_dir + 'weights/UCMerced_LandUse/'
 model_dir = base_dir + 'weights/2015_4_classes/'
 
-
 # 定义训练集以及验证集的路径
 # train_data_dir = base_dir + 'data/UCMerced_LandUse/train_split'
 # val_data_dir = base_dir + 'data/UCMerced_LandUse/val_split'
@@ -63,9 +61,28 @@ val_data_dir = base_dir + 'data/2015_4_classes/aug_256/val_split'
 # 共21类(影像中所有地物的名称)
 ObjectNames = ['building', 'other', 'water', 'zhibei']
 
-
 WEIGHTS_PATH = '/media/files/xdm/classification/pre_weights/vgg16_weights_tf_dim_ordering_tf_kernels.h5'
 WEIGHTS_PATH_NO_TOP = '/media/files/xdm/classification/pre_weights/vgg16_weights_tf_dim_ordering_tf_kernels_notop.h5'
+
+
+def triplet_loss(y_true, y_pred):
+    y_pred = K.l2_normalize(y_pred, axis=1)
+    batch = batch_size
+    print(batch)
+    ref1 = y_pred[0:batch, :]
+    pos1 = y_pred[batch:batch + batch, :]
+    neg1 = y_pred[batch + batch:3 * batch, :]
+    dis_pos = K.sum(K.square(ref1 - pos1), axis=1, keepdims=True)
+    dis_neg = K.sum(K.square(ref1 - neg1), axis=1, keepdims=True)
+    dis_pos = K.sqrt(dis_pos)
+    dis_neg = K.sqrt(dis_neg)
+    a1 = 17
+    d1 = dis_pos + K.maximum(0.0, dis_pos - dis_neg + a1)
+    return K.mean(d1)
+
+
+def hinge(y_true, y_pred):
+    return K.mean(K.maximum(1. - y_true * y_pred, 0.), axis=-1)
 
 
 def Conv2d_BN(x, nb_filter, kernel_size, padding='same', strides=(1, 1), name=None):
@@ -97,6 +114,7 @@ def Inception(x, nb_filter):
 
     return x
 
+
 def GoogleNet(input_shape=(224, 224, 3), nclass=10):
     img_input = Input(shape=input_shape)
     # padding = 'same'，填充为(步长-1）/2,还可以用ZeroPadding2D((3,3))
@@ -117,26 +135,29 @@ def GoogleNet(input_shape=(224, 224, 3), nclass=10):
     x = Inception(x, 256)  # 1024
     x = AveragePooling2D(pool_size=(7, 7), strides=(7, 7), padding='same')(x)
     x = Dropout(0.4)(x)
+    x = Flatten(name='flatten')(x)
     x = Dense(1000, activation='relu')(x)
     x = Dense(nclass, activation='softmax')(x)
+    # x = Flatten()(x)
 
     model = Model(img_input, x, name='inception')
-    model.compile(loss='categorical_crossentropy', optimizer='sgd', metrics=['accuracy'])
-    model.summary()
+    # model.compile(loss='categorical_crossentropy', optimizer='sgd', metrics=['accuracy'])
+    # model.summary()
     return model
 
 
 if __name__ == '__main__':
     # print('Loading VGG16 Weights ...')
-    googelnet = GoogleNet(input_shape=(img_width, img_height, img_channel), nclass=10)
+    googelnet = GoogleNet(input_shape=(img_width, img_height, img_channel), nclass=4)
     googelnet.summary()
 
     optimizer = SGD(lr=learning_rate, momentum=0.9, decay=0.001, nesterov=True)
-    googelnet.compile(loss='categorical_crossentropy', optimizer=optimizer, metrics=['accuracy'])
+    # googelnet.compile(loss=['categorical_crossentropy', triplet_loss], optimizer=optimizer, metrics=['accuracy'])
+    googelnet.compile(loss='categorical_crossentropy', optimizer=optimizer, metrics=['accuracy', hinge])
 
     # autosave best Model
     # best_model_file = model_dir + "VGG16_UCM_weights.h5"
-    best_model_file = model_dir + "VGG16_2015_4_classes_weights.h5"
+    best_model_file = model_dir + "googlenet_2015_4_classes_weights_with_triplet_loss.h5"
     best_model = ModelCheckpoint(best_model_file, monitor='val_acc', verbose=1, save_best_only=True)
 
     # this is the augmentation configuration we will use for training
@@ -159,7 +180,7 @@ if __name__ == '__main__':
     train_generator = train_datagen.flow_from_directory(
         train_data_dir,
         target_size=(img_width, img_height),
-        batch_size=batch_size,
+        batch_size=batch_size * 3,
         shuffle=True,
         # save_to_dir = '/Users/pengpai/Desktop/python/DeepLearning/Kaggle/NCFM/data/visualization',
         # save_prefix = 'aug',
@@ -169,7 +190,7 @@ if __name__ == '__main__':
     validation_generator = val_datagen.flow_from_directory(
         val_data_dir,
         target_size=(img_width, img_height),
-        batch_size=batch_size,
+        batch_size=batch_size * 3,
         shuffle=True,
         # save_to_dir = '/Users/pengpai/Desktop/python/DeepLearning/Kaggle/NCFM/data/visulization',
         # save_prefix = 'aug',
@@ -183,9 +204,9 @@ if __name__ == '__main__':
     from keras.utils.vis_utils import plot_model
 
     # plot_model(VGG16_model, to_file=model_dir + 'VGG16_UCM_{}_{}.png'.format(batch_size, nbr_epochs), show_shapes=True)
-    plot_model(VGG16_model, to_file=model_dir + 'VGG16_2015_4_classes_model.png', show_shapes=True)
+    plot_model(googelnet, to_file=model_dir + 'googelnet_2015_4_classes_model.png', show_shapes=True)
 
-    H = VGG16_model.fit_generator(
+    H = googelnet.fit_generator(
         train_generator,
         samples_per_epoch=nbr_train_samples,
         nb_epoch=nbr_epochs,
@@ -207,7 +228,7 @@ if __name__ == '__main__':
     plt.legend(loc="lower left")
     # 存储图像，注意，必须在show之前savefig，否则存储的图片一片空白
     # plt.savefig(model_dir + "VGG16_UCM_{}_{}.png".format(batch_size, nbr_epochs))
-    plt.savefig(model_dir + "VGG16_2015_4_classes_{}_{}.png".format(batch_size, nbr_epochs))
+    plt.savefig(model_dir + "googlenet_2015_4_classes_{}_{}.png".format(batch_size, nbr_epochs))
     # plt.show()
 
     print('[{}]Finishing training...'.format(str(datetime.datetime.now())))

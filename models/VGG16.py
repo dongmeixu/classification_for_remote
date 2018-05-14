@@ -25,7 +25,7 @@ import matplotlib.pyplot as plt
 
 
 # 指定GPU
-os.environ['CUDA_VISIBLE_DEVICES'] = '2'
+os.environ['CUDA_VISIBLE_DEVICES'] = '0'
 
 # 定义超参数
 learning_rate = 0.0001
@@ -66,6 +66,10 @@ ObjectNames = ['building', 'other', 'water', 'zhibei']
 
 WEIGHTS_PATH = '/media/files/xdm/classification/pre_weights/vgg16_weights_tf_dim_ordering_tf_kernels.h5'
 WEIGHTS_PATH_NO_TOP = '/media/files/xdm/classification/pre_weights/vgg16_weights_tf_dim_ordering_tf_kernels_notop.h5'
+
+
+def hinge(y_true, y_pred):
+    return K.mean(K.maximum(1. - y_true * y_pred, 0.1), axis=-1)
 
 
 def VGG16(include_top=True, weights='imagenet',
@@ -245,12 +249,12 @@ if __name__ == '__main__':
     VGG16_model.summary()
 
     optimizer = SGD(lr=learning_rate, momentum=0.9, decay=0.001, nesterov=True)
-    VGG16_model.compile(loss='categorical_crossentropy', optimizer=optimizer, metrics=['accuracy'])
+    VGG16_model.compile(loss='categorical_crossentropy', optimizer=optimizer, metrics=['accuracy', hinge])
 
     # autosave best Model
     # best_model_file = model_dir + "VGG16_UCM_weights.h5"
     # best_model_file = model_dir + "VGG16_2015_4_classes_weights.h5"
-    best_model_file = model_dir + "VGG16_2015_4_classes_weights_without_fc.h5"
+    best_model_file = model_dir + "VGG16_2015_4_classes_weights_without_fc_hinge.h5"
     best_model = ModelCheckpoint(best_model_file, monitor='val_acc', verbose=1, save_best_only=True)
 
     # this is the augmentation configuration we will use for training
@@ -298,7 +302,7 @@ if __name__ == '__main__':
 
     # plot_model(VGG16_model, to_file=model_dir + 'VGG16_UCM_{}_{}.png'.format(batch_size, nbr_epochs), show_shapes=True)
     # plot_model(VGG16_model, to_file=model_dir + 'VGG16_2015_4_classes_model.png', show_shapes=True)
-    plot_model(VGG16_model, to_file=model_dir + 'VGG16_2015_4_classes_model_without_fc.png', show_shapes=True)
+    plot_model(VGG16_model, to_file=model_dir + 'VGG16_2015_4_classes_model_without_fc_hinge.png', show_shapes=True)
 
     H = VGG16_model.fit_generator(
         train_generator,
@@ -323,7 +327,7 @@ if __name__ == '__main__':
     # 存储图像，注意，必须在show之前savefig，否则存储的图片一片空白
     # plt.savefig(model_dir + "VGG16_UCM_{}_{}.png".format(batch_size, nbr_epochs))
     # plt.savefig(model_dir + "VGG16_2015_4_classes_{}_{}.png".format(batch_size, nbr_epochs))
-    plt.savefig(model_dir + "VGG16_2015_4_classes_{}_{}_without_fc.png".format(batch_size, nbr_epochs))
+    plt.savefig(model_dir + "VGG16_2015_4_classes_{}_{}_without_fc_hinge.png".format(batch_size, nbr_epochs))
     # plt.show()
 
     print('[{}]Finishing training...'.format(str(datetime.datetime.now())))
