@@ -24,28 +24,37 @@ os.environ['CUDA_VISIBLE_DEVICES'] = '0'
 
 # 定义超参数
 learning_rate = 0.0001
-img_width = 256
-img_height = 256
+img_width = 400
+img_height = 400
 # nbr_train_samples = 1672
-# nbr_validation_samples = 419
-nbr_train_samples = 191
-nbr_validation_samples = 51
+# # nbr_validation_samples = 419
+# nbr_train_samples = 191
+# nbr_validation_samples = 51
+
+
+nbr_train_samples = 2843
+nbr_validation_samples = 349
+
+
 nbr_epochs = 800
 batch_size = 32
 img_channel = 3
 # n_classes = 21
-n_classes = 4
+n_classes = 10
 
 base_dir = '/media/files/xdm/classification/'
 # model_dir = base_dir + 'weights/UCMerced_LandUse/'
-model_dir = base_dir + 'weights/2015_4_classes/'
-
+model_dir = base_dir + 'weights/new_10_classes/'
 
 # 定义训练集以及验证集的路径
 # train_data_dir = base_dir + 'data/UCMerced_LandUse/train_split'
-# val_data_dir = base_dir + 'data/UCMerced_LandUse/val_split'
-train_data_dir = base_dir + 'data/2015_4_classes/aug_256/train_split'
-val_data_dir = base_dir + 'data/2015_4_classes/aug_256/val_split'
+# # val_data_dir = base_dir + 'data/UCMerced_LandUse/val_split'
+# train_data_dir = base_dir + 'data/2015_4_classes/aug_256/train_split'
+# val_data_dir = base_dir + 'data/2015_4_classes/aug_256/val_split'
+
+
+train_data_dir = base_dir + 'data/process_imgsize400/train'
+val_data_dir = base_dir + 'data/process_imgsize400/val'
 
 # # 共21类(影像中所有地物的名称)
 # ObjectNames = ['agricultural', 'airplane', 'baseballdiamond', 'beach',
@@ -56,8 +65,8 @@ val_data_dir = base_dir + 'data/2015_4_classes/aug_256/val_split'
 #                ]
 
 # 共21类(影像中所有地物的名称)
-ObjectNames = ['building', 'other', 'water', 'zhibei']
-
+# ObjectNames = ['building', 'other', 'water', 'zhibei']
+ObjectNames = ['01_gengdi', '02_yuandi', '03_lindi', '04_caodi', '05_fangwujianzhu', '06_road', '07_gouzhuwu', '08_rengong', '09_huangmo', '10_water']
 # 定义权重文件位置
 # 在服务器上调用预训练模型自动从网络上下载的时候会失败
 # 所以需要提前将下载好的权重文件放到指定路径下
@@ -434,6 +443,7 @@ if __name__ == '__main__':
 
     print('Adding Average Pooling Layer and Softmax Output Layer ...')
     output = InceptionV3_notop.get_layer(index=-1).output  # Shape: (6, 6, 2048)
+    print(output.shape)
     output = AveragePooling2D((6, 6), strides=(6, 6), name='avg_pool')(output)
     # output = Flatten(name='flatten')(output)
     # output = Dense(n_classes, activation='softmax', name='predictions')(output)
@@ -448,7 +458,7 @@ if __name__ == '__main__':
 
     # autosave best Model
     # best_model_file = model_dir + "InceptionV3_UCM_weights.h5"
-    best_model_file = model_dir + "InceptionV3_2015_4_classes_without_fc.h5"
+    best_model_file = model_dir + "InceptionV3_10_classes_without_fc.h5"
     best_model = ModelCheckpoint(best_model_file, monitor='val_acc', verbose=1, save_best_only=True)
 
     # this is the augmentation configuration we will use for training
@@ -496,7 +506,7 @@ if __name__ == '__main__':
 
     # plot_model(InceptionV3_model, to_file=model_dir + 'InceptionV3_UCM_model_{}_{}.png'.format(batch_size, nbr_epochs),
     #            show_shapes=True)
-    plot_model(InceptionV3_model, to_file=model_dir + 'InceptionV3_2015_4_classes_model_without_fc.png',
+    plot_model(InceptionV3_model, to_file=model_dir + 'InceptionV3_10_classes_model_without_fc.png',
                show_shapes=True)
 
     H = InceptionV3_model.fit_generator(
@@ -521,7 +531,7 @@ if __name__ == '__main__':
     plt.legend(loc="lower left")
     # 存储图像，注意，必须在show之前savefig，否则存储的图片一片空白
     # plt.savefig(model_dir + "InceptionV3_UCM_{}_{}.png".format(batch_size, nbr_epochs))
-    plt.savefig(model_dir + "InceptionV3_2015_4_classes_{}_{}_without_fc.png".format(batch_size, nbr_epochs))
+    plt.savefig(model_dir + "InceptionV3_10_classes_{}_{}_without_fc.png".format(batch_size, nbr_epochs))
     # plt.show()
 
     print('[{}]Finishing training...'.format(str(datetime.datetime.now())))

@@ -28,31 +28,31 @@ from VGG16 import VGG16
 from Xception import Xception
 
 # 指定GPU
-os.environ['CUDA_VISIBLE_DEVICES'] = '1'
+os.environ['CUDA_VISIBLE_DEVICES'] = '0'
 
 # 定义超参数
 learning_rate = 0.0001
-img_width = 256
-img_height = 256
+img_width = 200
+img_height = 200
 # nbr_train_samples = 1672
 # nbr_validation_samples = 419
-nbr_train_samples = 191
-nbr_validation_samples = 51
+nbr_train_samples = 2829
+nbr_validation_samples = 712
 nbr_epochs = 800
 batch_size = 32
 img_channel = 3
 # n_classes = 21
-n_classes = 4
+n_classes = 10
 
 base_dir = '/media/files/xdm/classification/'
 # model_dir = base_dir + 'weights/UCMerced_LandUse/'
-model_dir = base_dir + 'weights/2015_4_classes/'
+model_dir = base_dir + 'weights/new_10_classes/'
 
 # 定义训练集以及验证集的路径
 # train_data_dir = base_dir + 'data/UCMerced_LandUse/train_split'
 # val_data_dir = base_dir + 'data/UCMerced_LandUse/val_split'
-train_data_dir = base_dir + 'data/2015_4_classes/aug_256/train_split'
-val_data_dir = base_dir + 'data/2015_4_classes/aug_256/val_split'
+train_data_dir = base_dir + 'data/train_split'
+val_data_dir = base_dir + 'data/test_split'
 
 # # 共21类(影像中所有地物的名称)
 # ObjectNames = ['agricultural', 'airplane', 'baseballdiamond', 'beach',
@@ -62,8 +62,11 @@ val_data_dir = base_dir + 'data/2015_4_classes/aug_256/val_split'
 #                'river', 'runway', 'sparseresidential', 'storagetanks', 'tenniscourt'
 #                ]
 
-# 共21类(影像中所有地物的名称)
-ObjectNames = ['building', 'other', 'water', 'zhibei']
+# 共4类(影像中所有地物的名称)
+# ObjectNames = ['building', 'other', 'water', 'zhibei']
+
+ObjectNames = ['01_gengdi', '02_yuandi', '03_lindi', '04_caodi', '05_fangwujianzhu',
+               '06_road', '07_gouzhuwu', '08_rengong', '09_huangmo', "10_water"]
 
 WEIGHTS_PATH = '/media/files/xdm/classification/pre_weights/vgg16_weights_tf_dim_ordering_tf_kernels.h5'
 WEIGHTS_PATH_NO_TOP = '/media/files/xdm/classification/pre_weights/vgg16_weights_tf_dim_ordering_tf_kernels_notop.h5'

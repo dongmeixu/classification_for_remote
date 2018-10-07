@@ -84,7 +84,7 @@ WEIGHTS_PATH_NO_TOP = '/media/files/xdm/classification/pre_weights/vgg16_weights
 
 
 """
-预训练vgg16 + 2个四向rnn
+从头开始训练vgg16 + 2个四向rnn
 
 """
 def VGG16(include_top=True, weights='imagenet',
@@ -249,7 +249,7 @@ def VGG16(include_top=True, weights='imagenet',
 
 if __name__ == '__main__':
     print('Loading VGG16 Weights ...')
-    VGG16_notop = VGG16(include_top=False, weights='imagenet',
+    VGG16_notop = VGG16(include_top=False, weights='None',
                         input_tensor=None, input_shape=(img_width, img_height, img_channel))
     # VGG16_notop.summary()
 
@@ -276,7 +276,7 @@ if __name__ == '__main__':
     # autosave best Model
     # best_model_file = model_dir + "VGG16_UCM_weights.h5"
     # best_model_file = model_dir + "RVGG16_2015_4_classes_weights.h5"
-    best_model_file = model_dir + "RVGG16_10_classes_weights.h5"
+    best_model_file = model_dir + "RVGG16_10_cls_weights.h5"
     best_model = ModelCheckpoint(best_model_file, monitor='val_acc', verbose=1, save_best_only=True)
     early_stop = EarlyStopping(monitor='val_loss', min_delta=0, patience=10, verbose=0, mode='auto')
 
@@ -324,7 +324,7 @@ if __name__ == '__main__':
     from keras.utils.vis_utils import plot_model
 
     # plot_model(VGG16_model, to_file=model_dir + 'RVGG16_UCM_{}_{}.png'.format(batch_size, nbr_epochs), show_shapes=True)
-    plot_model(VGG16_model, to_file=model_dir + 'RVGG16_10_cls_model.png', show_shapes=True)
+    plot_model(VGG16_model, to_file=model_dir + 'RVGG16_10_cls_model_nopre.png', show_shapes=True)
 
     H = VGG16_model.fit_generator(
         train_generator,
@@ -335,7 +335,7 @@ if __name__ == '__main__':
         callbacks=[best_model, early_stop]
     )
 
-    VGG16_model.save_weights(model_dir + 'my_10cls_weights_pre.h5')
+    VGG16_model.save_weights(model_dir + 'my_10cls_weights_nopre.h5')
 
     # plot the training loss and accuracy
     plt.figure()
@@ -351,7 +351,7 @@ if __name__ == '__main__':
     plt.legend(loc="lower left")
     # 存储图像，注意，必须在show之前savefig，否则存储的图片一片空白
     # plt.savefig(model_dir + "VGG16_UCM_{}_{}.png".format(batch_size, nbr_epochs))
-    plt.savefig(model_dir + "RVGG16_10_cls_pre_{}_{}.png".format(batch_size, nbr_epochs))
+    plt.savefig(model_dir + "RVGG16_10_cls_nopre_{}_{}.png".format(batch_size, nbr_epochs))
     # plt.show()
 
     print('[{}]Finishing training...'.format(str(datetime.datetime.now())))

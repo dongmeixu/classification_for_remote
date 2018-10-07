@@ -211,7 +211,7 @@ if __name__ == "__main__":
     # plt.show()
 
     model.compile(loss=score_loss,  # 换一个loss
-                  optimizer=SGD,
+                  optimizer=optimizer,
                   metrics=[score_metric]
                   )
 

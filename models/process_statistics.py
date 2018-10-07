@@ -49,9 +49,9 @@ def process_1(path):
             chicu = file.shape[:2]  # 获取图片的尺寸
             area = chicu[0] * chicu[1]  # 获取图片的面积
             result.append((file_name, chicu, area))
-    with open('统计_' + path.split('\\')[-2] + '.csv', 'a', newline='') as myfile:
-        mywriter = csv.writer(myfile)
-        mywriter.writerows(result)
+        with open('统计_' + file_name + '.csv', 'a', newline='') as myfile:
+            mywriter = csv.writer(myfile)
+            mywriter.writerows(result)
 
 
 """
@@ -239,7 +239,11 @@ if __name__ == '__main__':
     #         print(newName)
     #         os.rename(os.path.join(path, file, name), os.path.join(path, file, newName))
 
-    path = r'F:\remote_sensing\2015_4_class\summary\256'
+    # path = r'F:\remote_sensing\2015_4_class\summary\256'
     # process_2(path)
-    aug_path = r'F:\remote_sensing\2015_4_class\summary\aug_256'
-    creat_dataset(image_num=50, mode='augment', path=path, aug_path=aug_path)
+    # aug_path = r'F:\remote_sensing\2015_4_class\summary\aug_256'
+    # creat_dataset(image_num=50, mode='augment', path=path, aug_path=aug_path)
+
+    path = r'F:\remote_sensing\2017_10\process_1'
+    # process_0(path)
+    process_1(path)
