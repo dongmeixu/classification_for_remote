@@ -3,6 +3,7 @@ from __future__ import absolute_import
 
 import threading
 
+import keras
 import keras.backend as K
 import warnings
 
@@ -27,13 +28,17 @@ from keras.utils import layer_utils
 matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 
+"""
+实验1：利用Vgg16-BiLSTM 迁移学习   尺寸是200
+
+"""
 # 指定GPU
-os.environ['CUDA_VISIBLE_DEVICES'] = '1'
+os.environ['CUDA_VISIBLE_DEVICES'] = '0'
 
 # 定义超参数
 learning_rate = 0.0001
-img_width = 400
-img_height = 400
+img_width = 200
+img_height = 200
 # nbr_train_samples = 1672
 # # nbr_validation_samples = 419
 # nbr_train_samples = 191
@@ -42,7 +47,6 @@ img_height = 400
 
 nbr_train_samples = 2843
 nbr_validation_samples = 349
-
 
 nbr_epochs = 800
 batch_size = 32
@@ -61,8 +65,8 @@ model_dir = base_dir + 'weights/new_10_classes/'
 # val_data_dir = base_dir + 'data/2015_4_classes/aug_256/val_split'
 
 
-train_data_dir = base_dir + 'data/process_imgsize400/train'
-val_data_dir = base_dir + 'data/process_imgsize400/val'
+train_data_dir = base_dir + 'data/process_imgsize200/train'
+val_data_dir = base_dir + 'data/process_imgsize200/val'
 
 # # 共21类(影像中所有地物的名称)
 # ObjectNames = ['agricultural', 'airplane', 'baseballdiamond', 'beach',
@@ -74,19 +78,24 @@ val_data_dir = base_dir + 'data/process_imgsize400/val'
 
 # 共21类(影像中所有地物的名称)
 # ObjectNames = ['building', 'other', 'water', 'zhibei']
-ObjectNames = ['01_gengdi', '02_yuandi', '03_lindi', '04_caodi', '05_fangwujianzhu', '06_road', '07_gouzhuwu', '08_rengong', '09_huangmo', '10_water']
+ObjectNames = ['01_gengdi', '02_yuandi', '03_lindi', '04_caodi', '05_fangwujianzhu', '06_road', '07_gouzhuwu',
+               '08_rengong', '09_huangmo', '10_water']
 
 # WEIGHTS_PATH = r'C:\Users\ASUS\Desktop\高分影像\pre_weights\vgg16_weights_tf_dim_ordering_tf_kernels.h5'
 # WEIGHTS_PATH_NO_TOP = r'C:\Users\ASUS\Desktop\高分影像\pre_weights\vgg16_weights_tf_dim_ordering_tf_kernels_notop.h5'
 
-WEIGHTS_PATH = '/media/files/xdm/classification/pre_weights/vgg16_weights_tf_dim_ordering_tf_kernels.h5'
-WEIGHTS_PATH_NO_TOP = '/media/files/xdm/classification/pre_weights/vgg16_weights_tf_dim_ordering_tf_kernels_notop.h5'
+# WEIGHTS_PATH = '/media/files/xdm/classification/pre_weights/vgg16_weights_tf_dim_ordering_tf_kernels.h5'
+# WEIGHTS_PATH_NO_TOP = '/media/files/xdm/classification/pre_weights/vgg16_weights_tf_dim_ordering_tf_kernels_notop.h5'
 
+WEIGHTS_PATH = '/search/odin/xudongmei/working/pre_weights/vgg16_weights_tf_dim_ordering_tf_kernels.h5'
+WEIGHTS_PATH_NO_TOP = '/search/odin/xudongmei/working/pre_weights/vgg16_weights_tf_dim_ordering_tf_kernels_notop.h5'
 
 """
-从头开始训练vgg16 + 2个四向rnn
+预训练vgg16 + 2个四向rnn
 
 """
+
+
 def VGG16(include_top=True, weights='imagenet',
           input_tensor=None, input_shape=None,
           pooling=None,
@@ -247,20 +256,64 @@ def VGG16(include_top=True, weights='imagenet',
     return model
 
 
+class LossHistory(keras.callbacks.Callback):
+    def on_train_begin(self, logs={}):
+        self.losses = {'batch': [], 'epoch': []}
+        self.accuracy = {'batch': [], 'epoch': []}
+        self.val_loss = {'batch': [], 'epoch': []}
+        self.val_acc = {'batch': [], 'epoch': []}
+
+    def on_batch_end(self, batch, logs={}):
+        self.losses['batch'].append(logs.get('loss'))
+        self.accuracy['batch'].append(logs.get('acc'))
+        self.val_loss['batch'].append(logs.get('val_loss'))
+        self.val_acc['batch'].append(logs.get('val_acc'))
+
+    def on_epoch_end(self, batch, logs={}):
+        self.losses['epoch'].append(logs.get('loss'))
+        self.accuracy['epoch'].append(logs.get('acc'))
+        self.val_loss['epoch'].append(logs.get('val_loss'))
+        self.val_acc['epoch'].append(logs.get('val_acc'))
+
+    def loss_plot(self, loss_type):
+        iters = range(len(self.losses[loss_type]))
+        # 创建一个图
+        plt.figure()
+        # acc
+        plt.plot(iters, self.accuracy[loss_type], 'r', label='train acc')  # plt.plot(x,y)，这个将数据画成曲线
+        # loss
+        plt.plot(iters, self.losses[loss_type], 'g', label='train loss')
+        if loss_type == 'epoch':
+            # val_acc
+            plt.plot(iters, self.val_acc[loss_type], 'b', label='val acc')
+            # val_loss
+            plt.plot(iters, self.val_loss[loss_type], 'k', label='val loss')
+        plt.grid(True)  # 设置网格形式
+        plt.xlabel(loss_type)
+        plt.ylabel('acc-loss')  # 给x，y轴加注释
+        plt.legend(loc="upper right")  # 设置图例显示位置
+        # plt.show()
+        plt.title("Training Loss and Accuracy on Satellite")
+        plt.savefig(model_dir + "RVGG16_10_cls_128_pre_{}_{}.png".format(batch_size, nbr_epochs))
+
+
 if __name__ == '__main__':
     print('Loading VGG16 Weights ...')
-    VGG16_notop = VGG16(include_top=False, weights=None,
+    VGG16_notop = VGG16(include_top=False, weights='imagenet',
                         input_tensor=None, input_shape=(img_width, img_height, img_channel))
     # VGG16_notop.summary()
 
     print('Adding Average Pooling Layer and Softmax Output Layer ...')
     output = VGG16_notop.get_layer(index=-1).output  # Shape: (8, 8, 2048)
+    output = Conv2D(128, (1, 1), activation='relu', padding='same')(output)  # 作用是降维
+
     rnn_shape = K.int_shape(output)
     print(rnn_shape)  # (None, 8, 8, 512)
     output = four_dir_rnn(output, rnn_shape)
 
     # 2层rnn
     rnn_shape = K.int_shape(output)
+    # 通道数为512时OOM
     print(rnn_shape)  # (None, 8, 8, 512)
     output = four_dir_rnn(output, rnn_shape)
     # output = AveragePooling2D((8, 8), strides=(8, 8), name='avg_pool')(output)
@@ -271,12 +324,15 @@ if __name__ == '__main__':
     VGG16_model.summary()
 
     optimizer = SGD(lr=learning_rate, momentum=0.9, decay=0.001, nesterov=True)
-    VGG16_model.compile(loss='categorical_crossentropy', optimizer=optimizer, metrics=['accuracy', "top_k_categorical_accuracy"])
+    VGG16_model.compile(loss='categorical_crossentropy', optimizer=optimizer,
+                        metrics=['accuracy', "top_k_categorical_accuracy"])
+    # 创建一个实例LossHistory
+    history = LossHistory()
 
     # autosave best Model
     # best_model_file = model_dir + "VGG16_UCM_weights.h5"
     # best_model_file = model_dir + "RVGG16_2015_4_classes_weights.h5"
-    best_model_file = model_dir + "RVGG16_10_cls_400_weights.h5"
+    best_model_file = model_dir + "RVGG16_10_cls_200_weights.h5"
     best_model = ModelCheckpoint(best_model_file, monitor='val_acc', verbose=1, save_best_only=True)
     early_stop = EarlyStopping(monitor='val_loss', min_delta=0, patience=10, verbose=0, mode='auto')
 
@@ -324,7 +380,7 @@ if __name__ == '__main__':
     # from keras.utils.vis_utils import plot_model
 
     # plot_model(VGG16_model, to_file=model_dir + 'RVGG16_UCM_{}_{}.png'.format(batch_size, nbr_epochs), show_shapes=True)
-    # plot_model(VGG16_model, to_file=model_dir + 'RVGG16_10_cls_400_model_nopre.png', show_shapes=True)
+    # plot_model(VGG16_model, to_file=model_dir + 'RVGG16_10_cls_400_model.png', show_shapes=True)
 
     H = VGG16_model.fit_generator(
         train_generator,
@@ -332,29 +388,30 @@ if __name__ == '__main__':
         nb_epoch=nbr_epochs,
         validation_data=validation_generator,
         nb_val_samples=nbr_validation_samples,
-        callbacks=[best_model, early_stop]
+        callbacks=[history, early_stop]
     )
+    VGG16_model.save_weights(best_model_file)
 
-    VGG16_model.save_weights(model_dir + 'my_10cls_weights_nopre.h5')
+    # VGG16_model.save_weights(model_dir + 'my_10_cls_128_weights_pre.h5')
 
     # plot the training loss and accuracy
-    plt.figure()
-    N = nbr_epochs
-    plt.plot(np.arange(0, N), H.history["loss"], label="train_loss")
-    plt.plot(np.arange(0, N), H.history["val_loss"], label="val_loss")
-    plt.plot(np.arange(0, N), H.history["acc"], label="train_acc")
-    plt.plot(np.arange(0, N), H.history["val_acc"], label="val_acc")
-
-    plt.title("Training Loss and Accuracy on Satellite")
-    plt.xlabel("Epoch #")
-    plt.ylabel("Loss/Accuracy")
-    plt.legend(loc="lower left")
+    # plt.figure()
+    # N = nbr_epochs
+    # plt.plot(np.arange(0, N), H.history["loss"], label="train_loss")
+    # plt.plot(np.arange(0, N), H.history["val_loss"], label="val_loss")
+    # plt.plot(np.arange(0, N), H.history["acc"], label="train_acc")
+    # plt.plot(np.arange(0, N), H.history["val_acc"], label="val_acc")
+    #
+    # plt.title("Training Loss and Accuracy on Satellite")
+    # plt.xlabel("Epoch #")
+    # plt.ylabel("Loss/Accuracy")
+    # plt.legend(loc="lower left")
     # 存储图像，注意，必须在show之前savefig，否则存储的图片一片空白
     # plt.savefig(model_dir + "VGG16_UCM_{}_{}.png".format(batch_size, nbr_epochs))
-    plt.savefig(model_dir + "RVGG16_10_cls_400_nopre_{}_{}.png".format(batch_size, nbr_epochs))
-    # plt.show()
-
+    # plt.savefig(model_dir + "RVGG16_10_cls_128_pre_{}_{}.png".format(batch_size, nbr_epochs))
+    # # plt.show()
+    history.loss_plot('epoch')
     print('[{}]Finishing training...'.format(str(datetime.datetime.now())))
 
     end = datetime.datetime.now()
-    print("总的训练时间为：", end - begin)
+    print("Total train time: ", end - begin)

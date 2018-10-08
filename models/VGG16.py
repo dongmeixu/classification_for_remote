@@ -29,17 +29,18 @@ os.environ['CUDA_VISIBLE_DEVICES'] = '0'
 
 # 定义超参数
 learning_rate = 0.0001
-img_width = 200
-img_height = 200
-# nbr_train_samples = 1672
-# nbr_validation_samples = 419
-nbr_train_samples = 2829
-nbr_validation_samples = 712
+img_width = 400
+img_height = 400
+
+nbr_train_samples = 2843
+nbr_validation_samples = 349
+
 nbr_epochs = 800
 batch_size = 32
 img_channel = 3
 # n_classes = 21
 n_classes = 10
+
 
 base_dir = '/media/files/xdm/classification/'
 # model_dir = base_dir + 'weights/UCMerced_LandUse/'

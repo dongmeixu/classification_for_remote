@@ -1,4 +1,4 @@
-from keras.layers import Conv2D, Lambda, K, Reshape, Bidirectional, merge, CuDNNLSTM
+from keras.layers import Conv2D, Lambda, K, Reshape, Bidirectional, merge, CuDNNLSTM, add
 
 
 def four_dir_rnn(layer, filter_num):
@@ -21,7 +21,7 @@ def four_dir_rnn(layer, filter_num):
     layer_transpose = Reshape((-1, filter_num[-1]))(layer_transpose)  # (?, ?, 512)
     renet1 = Bidirectional(CuDNNLSTM(filter_num[-1], return_sequences=True))(layer)  # (?, ?, 1024)
     renet2 = Bidirectional(CuDNNLSTM(filter_num[-1], return_sequences=True))(layer_transpose)  # (?, ?, 1024)
-    renet = merge([renet1, renet2], mode='concat')  # (?, ?, 2048)
+    renet = add([renet1, renet2])  # (?, ?, 2048)   # 两个rnn融合
     renet = Reshape((layer_shape[1], layer_shape[1], -1))(renet)  # (?, ?, 7, 7)
     renet = Conv2D(filter_num[-1], kernel_size=(1, 1))(renet)
     return renet
