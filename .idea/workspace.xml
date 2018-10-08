@@ -2,19 +2,10 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="f64b3923-d2a0-4daf-84c0-0e63547e3645" name="Default" comment="">
-      <change afterPath="$PROJECT_DIR$/.idea/deployment.xml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/models/CNN-BiLSTM-nopre-128.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/models/CNN-BiLSTM-pre-200.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/models/CNN-BiLSTM-pre-256.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/models/CNN-BiLSTM-pre-512.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/classification_for_remote.iml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/classification_for_remote.iml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/misc.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/misc.xml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/models/CNN-BiLSTM-nopre-256.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/models/CNN-sep-BiLSTM-nopre-128.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/models/CNN-BiLSTM-128.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/models/RVGG-非预训练的Vgg16.py" beforeDir="false" afterPath="$PROJECT_DIR$/models/RVGG-非预训练的Vgg16.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/models/VGG16.py" beforeDir="false" afterPath="$PROJECT_DIR$/models/VGG16.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/models/data_process.py" beforeDir="false" afterPath="$PROJECT_DIR$/models/data_process.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/models/four_dir_rnn.py" beforeDir="false" afterPath="$PROJECT_DIR$/models/four_dir_rnn.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/models/CNN-BiLSTM-pre-200.py" beforeDir="false" afterPath="$PROJECT_DIR$/models/CNN-BiLSTM-pre-200.py" afterDir="false" />
     </list>
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
     <option name="TRACKING_ENABLED" value="true" />
@@ -66,17 +57,43 @@
       <file leaf-file-name="CNN-BiLSTM-pre-200.py" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/models/CNN-BiLSTM-pre-200.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="121">
-              <caret line="198" column="13" lean-forward="true" selection-start-line="198" selection-start-column="13" selection-end-line="198" selection-end-column="13" />
+            <state relative-caret-position="563">
+              <caret line="296" column="50" selection-start-line="296" selection-start-column="50" selection-end-line="296" selection-end-column="50" />
             </state>
           </provider>
         </entry>
       </file>
-      <file leaf-file-name="CNN-BiLSTM-nopre-128.py" pinned="false" current-in-tab="true">
-        <entry file="file://$PROJECT_DIR$/models/CNN-BiLSTM-nopre-128.py">
+      <file leaf-file-name="RVGG16_10_cls_200_pre_32_800.png" pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/models/RVGG16_10_cls_200_pre_32_800.png">
+          <provider selected="true" editor-type-id="images" />
+        </entry>
+      </file>
+      <file leaf-file-name="CNN-sep-BiLSTM-nopre-128.py" pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/models/CNN-sep-BiLSTM-nopre-128.py">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="470">
+              <caret line="314" column="17" lean-forward="true" selection-start-line="314" selection-start-column="17" selection-end-line="314" selection-end-column="17" />
+              <folding>
+                <element signature="e#0#37#0" expanded="true" />
+              </folding>
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file leaf-file-name="CNN-BiLSTM-nopre-256.py" pinned="false" current-in-tab="true">
+        <entry file="file://$PROJECT_DIR$/models/CNN-BiLSTM-nopre-256.py">
           <provider selected="true" editor-type-id="text-editor">
             <state relative-caret-position="170">
               <caret line="35" column="39" selection-start-line="35" selection-start-column="39" selection-end-line="35" selection-end-column="39" />
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file leaf-file-name="CNN-BiLSTM-nopre-128.py" pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/models/CNN-BiLSTM-nopre-128.py">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="374">
+              <caret line="47" column="24" lean-forward="true" selection-start-line="47" selection-start-column="24" selection-end-line="47" selection-end-column="24" />
             </state>
           </provider>
         </entry>
@@ -142,9 +159,9 @@
   <component name="FindInProjectRecents">
     <findStrings>
       <find>400</find>
-      <find>128</find>
-      <find>512</find>
       <find>pre</find>
+      <find>512</find>
+      <find>128</find>
     </findStrings>
   </component>
   <component name="Git.Settings">
@@ -173,8 +190,10 @@
         <option value="$PROJECT_DIR$/models/CNN-BiLSTM-pre-256.py" />
         <option value="$PROJECT_DIR$/models/CNN-BiLSTM-pre-128.py" />
         <option value="$PROJECT_DIR$/models/CNN-BiLSTM-pre-512.py" />
-        <option value="$PROJECT_DIR$/models/CNN-BiLSTM-pre-200.py" />
         <option value="$PROJECT_DIR$/models/CNN-BiLSTM-nopre-128.py" />
+        <option value="$PROJECT_DIR$/models/CNN-BiLSTM-pre-200.py" />
+        <option value="$PROJECT_DIR$/models/CNN-sep-BiLSTM-nopre-128.py" />
+        <option value="$PROJECT_DIR$/models/CNN-BiLSTM-nopre-256.py" />
       </list>
     </option>
   </component>
@@ -347,7 +366,21 @@
       <option name="project" value="LOCAL" />
       <updated>1526310306588</updated>
     </task>
-    <option name="localTasksCounter" value="4" />
+    <task id="LOCAL-00004" summary="2018/10/8company">
+      <created>1538990190493</created>
+      <option name="number" value="00004" />
+      <option name="presentableId" value="LOCAL-00004" />
+      <option name="project" value="LOCAL" />
+      <updated>1538990190493</updated>
+    </task>
+    <task id="LOCAL-00005" summary="2018/10/8company">
+      <created>1538990219255</created>
+      <option name="number" value="00005" />
+      <option name="presentableId" value="LOCAL-00005" />
+      <option name="project" value="LOCAL" />
+      <updated>1538990219255</updated>
+    </task>
+    <option name="localTasksCounter" value="6" />
     <servers />
   </component>
   <component name="TodoView">
@@ -396,12 +429,10 @@
     <MESSAGE value="复制" />
     <MESSAGE value="Attention test model" />
     <MESSAGE value="Loss Function：F1损失函数 and multi_model:分2阶段训练" />
-    <option name="LAST_COMMIT_MESSAGE" value="Loss Function：F1损失函数 and multi_model:分2阶段训练" />
+    <MESSAGE value="2018/10/8company" />
+    <option name="LAST_COMMIT_MESSAGE" value="2018/10/8company" />
   </component>
   <component name="editorHistoryManager">
-    <entry file="file://$PROJECT_DIR$/models/predictions.txt" />
-    <entry file="file://$PROJECT_DIR$/working/working/projects/task1/new_version/train_val.py" />
-    <entry file="file://$PROJECT_DIR$/working/working/datasets/test/sogou/19.jpg" />
     <entry file="file://$PROJECT_DIR$/working/working/datasets/test/sogou/20.jpg" />
     <entry file="file://$PROJECT_DIR$/working/working/datasets/test/baidu/20.jpg" />
     <entry file="file://$PROJECT_DIR$/working/working/datasets/test/baidu/19.jpg" />
@@ -580,14 +611,34 @@
     <entry file="file://$PROJECT_DIR$/models/CNN_BiLSTM_pre_10_cls_256_pre_32_800.png">
       <provider selected="true" editor-type-id="images" />
     </entry>
-    <entry file="file://$PROJECT_DIR$/models/CNN-BiLSTM-pre-200.py">
+    <entry file="file://$PROJECT_DIR$/models/CNN-BiLSTM-nopre-128.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="121">
-          <caret line="198" column="13" lean-forward="true" selection-start-line="198" selection-start-column="13" selection-end-line="198" selection-end-column="13" />
+        <state relative-caret-position="374">
+          <caret line="47" column="24" lean-forward="true" selection-start-line="47" selection-start-column="24" selection-end-line="47" selection-end-column="24" />
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/models/CNN-BiLSTM-nopre-128.py">
+    <entry file="file://$PROJECT_DIR$/models/CNN-BiLSTM-pre-200.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="563">
+          <caret line="296" column="50" selection-start-line="296" selection-start-column="50" selection-end-line="296" selection-end-column="50" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/models/RVGG16_10_cls_200_pre_32_800.png">
+      <provider selected="true" editor-type-id="images" />
+    </entry>
+    <entry file="file://$PROJECT_DIR$/models/CNN-sep-BiLSTM-nopre-128.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="470">
+          <caret line="314" column="17" lean-forward="true" selection-start-line="314" selection-start-column="17" selection-end-line="314" selection-end-column="17" />
+          <folding>
+            <element signature="e#0#37#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/models/CNN-BiLSTM-nopre-256.py">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="170">
           <caret line="35" column="39" selection-start-line="35" selection-start-column="39" selection-end-line="35" selection-end-column="39" />

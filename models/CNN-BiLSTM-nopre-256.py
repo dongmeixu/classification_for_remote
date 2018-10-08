@@ -29,7 +29,7 @@ matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 
 """
-实验1：利用Vgg16-BiLSTM 迁移学习   尺寸是200
+实验1：利用Vgg16-BiLSTM 非迁移学习   尺寸是256
 
 """
 # 指定GPU
@@ -37,8 +37,8 @@ os.environ['CUDA_VISIBLE_DEVICES'] = '0'
 
 # 定义超参数
 learning_rate = 0.0001
-img_width = 200
-img_height = 200
+img_width = 256
+img_height = 256
 # nbr_train_samples = 1672
 # # nbr_validation_samples = 419
 # nbr_train_samples = 191
@@ -65,8 +65,8 @@ model_dir = base_dir + 'weights/new_10_classes/'
 # val_data_dir = base_dir + 'data/2015_4_classes/aug_256/val_split'
 
 
-train_data_dir = base_dir + 'data/process_imgsize200/train'
-val_data_dir = base_dir + 'data/process_imgsize200/val'
+train_data_dir = base_dir + 'data/process_imgsize256/train'
+val_data_dir = base_dir + 'data/process_imgsize256/val'
 
 # # 共21类(影像中所有地物的名称)
 # ObjectNames = ['agricultural', 'airplane', 'baseballdiamond', 'beach',
@@ -294,12 +294,12 @@ class LossHistory(keras.callbacks.Callback):
         plt.legend(loc="upper right")  # 设置图例显示位置
         # plt.show()
         plt.title("Training Loss and Accuracy on Satellite")
-        plt.savefig(model_dir + "RVGG16_10_cls_200_pre_{}_{}.png".format(batch_size, nbr_epochs))
+        plt.savefig(model_dir + "RVGG16_10_cls_256_nopre_{}_{}.png".format(batch_size, nbr_epochs))
 
 
 if __name__ == '__main__':
     print('Loading VGG16 Weights ...')
-    VGG16_notop = VGG16(include_top=False, weights='imagenet',
+    VGG16_notop = VGG16(include_top=False, weights=None,
                         input_tensor=None, input_shape=(img_width, img_height, img_channel))
     # VGG16_notop.summary()
 
@@ -332,7 +332,7 @@ if __name__ == '__main__':
     # autosave best Model
     # best_model_file = model_dir + "VGG16_UCM_weights.h5"
     # best_model_file = model_dir + "RVGG16_2015_4_classes_weights.h5"
-    best_model_file = model_dir + "RVGG16_10_cls_200_weights.h5"
+    best_model_file = model_dir + "RVGG16_10_cls_256_nopre_weights.h5"
     best_model = ModelCheckpoint(best_model_file, monitor='val_acc', verbose=1, save_best_only=True)
     early_stop = EarlyStopping(monitor='val_loss', min_delta=0, patience=10, verbose=0, mode='auto')
 
