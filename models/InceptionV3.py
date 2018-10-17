@@ -469,7 +469,7 @@ class LossHistory(keras.callbacks.Callback):
         plt.legend(loc="upper right")  # 设置图例显示位置
         # plt.show()
         plt.title("Training Loss and Accuracy on Satellite")
-        plt.savefig(model_dir + "RVGG16_10_cls_200_pre_{}_{}.png".format(batch_size, nbr_epochs))
+        plt.savefig(model_dir + "Inception_10_cls_256_pre_{}_{}.png".format(batch_size, nbr_epochs))
 
 
 if __name__ == '__main__':

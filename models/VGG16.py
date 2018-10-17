@@ -281,7 +281,7 @@ class LossHistory(keras.callbacks.Callback):
         plt.legend(loc="upper right")  # 设置图例显示位置
         # plt.show()
         plt.title("Training Loss and Accuracy on Satellite")
-        plt.savefig(model_dir + "RVGG16_10_cls_200_pre_{}_{}.png".format(batch_size, nbr_epochs))
+        plt.savefig(model_dir + "vgg16_10_cls_256_pre_{}_{}.png".format(batch_size, nbr_epochs))
 
 
 if __name__ == '__main__':
@@ -359,15 +359,15 @@ if __name__ == '__main__':
     # plot_model(VGG16_model, to_file=model_dir + 'RVGG16_UCM_{}_{}.png'.format(batch_size, nbr_epochs), show_shapes=True)
     # plot_model(VGG16_model, to_file=model_dir + 'RVGG16_10_cls_400_model.png', show_shapes=True)
 
-    # H = VGG16_model.fit_generator(
-    #     train_generator,
-    #     samples_per_epoch=nbr_train_samples,
-    #     nb_epoch=nbr_epochs,
-    #     validation_data=validation_generator,
-    #     nb_val_samples=nbr_validation_samples,
-    #     callbacks=[history, early_stop]
-    # )
-    # VGG16_model.save_weights(best_model_file)
+    H = VGG16_model.fit_generator(
+        train_generator,
+        samples_per_epoch=nbr_train_samples,
+        nb_epoch=nbr_epochs,
+        validation_data=validation_generator,
+        nb_val_samples=nbr_validation_samples,
+        callbacks=[history, early_stop]
+    )
+    VGG16_model.save_weights(best_model_file)
 
     # VGG16_model.save_weights(model_dir + 'my_10_cls_128_weights_pre.h5')
 
@@ -387,7 +387,7 @@ if __name__ == '__main__':
     # plt.savefig(model_dir + "VGG16_UCM_{}_{}.png".format(batch_size, nbr_epochs))
     # plt.savefig(model_dir + "RVGG16_10_cls_128_pre_{}_{}.png".format(batch_size, nbr_epochs))
     # # plt.show()
-    # history.loss_plot('epoch')
+    history.loss_plot('epoch')
     print('[{}]Finishing training...'.format(str(datetime.datetime.now())))
 
     end = datetime.datetime.now()
