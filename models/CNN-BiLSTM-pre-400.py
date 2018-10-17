@@ -29,16 +29,16 @@ matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 
 """
-实验1：利用Vgg16-BiLSTM 迁移学习   尺寸是200
+实验1：利用Vgg16-BiLSTM 迁移学习   尺寸是400
 
 """
 # 指定GPU
-os.environ['CUDA_VISIBLE_DEVICES'] = '0'
+os.environ['CUDA_VISIBLE_DEVICES'] = '0, 1'
 
 # 定义超参数
 learning_rate = 0.0001
-img_width = 200
-img_height = 200
+img_width = 400
+img_height = 400
 # nbr_train_samples = 1672
 # # nbr_validation_samples = 419
 # nbr_train_samples = 191
@@ -65,9 +65,9 @@ model_dir = base_dir + 'weights/new_10_classes/'
 # val_data_dir = base_dir + 'data/2015_4_classes/aug_256/val_split'
 
 
-train_data_dir = base_dir + 'data/process_imgsize200/train'
-val_data_dir = base_dir + 'data/process_imgsize200/val'
-test_data_dir = base_dir + 'data/process_imgsize200/test'
+train_data_dir = base_dir + 'data/process_imgsize400/train'
+val_data_dir = base_dir + 'data/process_imgsize400/val'
+test_data_dir = base_dir + 'data/process_imgsize400/test'
 
 # # 共21类(影像中所有地物的名称)
 # ObjectNames = ['agricultural', 'airplane', 'baseballdiamond', 'beach',
@@ -295,7 +295,7 @@ class LossHistory(keras.callbacks.Callback):
         plt.legend(loc="upper right")  # 设置图例显示位置
         # plt.show()
         plt.title("Training Loss and Accuracy on Satellite")
-        plt.savefig(model_dir + "RVGG16_10_cls_200_pre_{}_{}.png".format(batch_size, nbr_epochs))
+        plt.savefig(model_dir + "RVGG16_10_cls_400_pre_{}_{}.png".format(batch_size, nbr_epochs))
 
 
 if __name__ == '__main__':
@@ -333,7 +333,7 @@ if __name__ == '__main__':
     # autosave best Model
     # best_model_file = model_dir + "VGG16_UCM_weights.h5"
     # best_model_file = model_dir + "RVGG16_2015_4_classes_weights.h5"
-    best_model_file = model_dir + "RVGG16_10_cls_200_weights.h5"
+    best_model_file = model_dir + "RVGG16_10_cls_400_weights.h5"
     best_model = ModelCheckpoint(best_model_file, monitor='val_acc', verbose=1, save_best_only=True)
     early_stop = EarlyStopping(monitor='val_loss', min_delta=0, patience=10, verbose=0, mode='auto')
 
@@ -383,15 +383,15 @@ if __name__ == '__main__':
     # plot_model(VGG16_model, to_file=model_dir + 'RVGG16_UCM_{}_{}.png'.format(batch_size, nbr_epochs), show_shapes=True)
     # plot_model(VGG16_model, to_file=model_dir + 'RVGG16_10_cls_400_model.png', show_shapes=True)
 
-    # H = VGG16_model.fit_generator(
-    #     train_generator,
-    #     samples_per_epoch=nbr_train_samples,
-    #     nb_epoch=nbr_epochs,
-    #     validation_data=validation_generator,
-    #     nb_val_samples=nbr_validation_samples,
-    #     callbacks=[history, early_stop]
-    # )
-    # VGG16_model.save_weights(best_model_file)
+    H = VGG16_model.fit_generator(
+        train_generator,
+        samples_per_epoch=nbr_train_samples,
+        nb_epoch=nbr_epochs,
+        validation_data=validation_generator,
+        nb_val_samples=nbr_validation_samples,
+        callbacks=[history, early_stop]
+    )
+    VGG16_model.save_weights(best_model_file)
 
     # VGG16_model.save_weights(model_dir + 'my_10_cls_128_weights_pre.h5')
 
@@ -411,11 +411,11 @@ if __name__ == '__main__':
     # plt.savefig(model_dir + "VGG16_UCM_{}_{}.png".format(batch_size, nbr_epochs))
     # plt.savefig(model_dir + "RVGG16_10_cls_128_pre_{}_{}.png".format(batch_size, nbr_epochs))
     # # plt.show()
-    # history.loss_plot('epoch')
-    # print('[{}]Finishing training...'.format(str(datetime.datetime.now())))
-    #
-    # end = datetime.datetime.now()
-    # print("Total train time: ", end - begin)
+    history.loss_plot('epoch')
+    print('[{}]Finishing training...'.format(str(datetime.datetime.now())))
+
+    end = datetime.datetime.now()
+    print("Total train time: ", end - begin)
 
     VGG16_model.load_weights(best_model_file)
 
@@ -440,22 +440,21 @@ if __name__ == '__main__':
     print(VGG16_model.metrics_names)  # ['loss', 'acc']
     print(predictions)  # [1.0047961547970772, 0.6640625]
 
-    np.savetxt(os.path.join('predictions_pre200.txt'), predictions)
+    np.savetxt(os.path.join('predictions_pre400.txt'), predictions)
 
     print('Begin to write submission file ..')
-    # f_submit = open(os.path.join('submit_pre200.csv'), 'w')
-    # f_submit.write('image,01_gengdi,02_yuandi,03_lindi,04_caodi,05_fangwujianzhu,06_road,07_gouzhuwu,08_rengong,09_huangmo,10_water\n')
-    # for i, image_name in enumerate(test_image_list):
-    #     print(np.array(predictions).shape)
-    #     pred = ['%.6f' % p for p in predictions[i, :]]
-    #     if i % 100 == 0:
-    #         print('{} / {}'.format(i, 349))
-    #     f_submit.write('%s,%s\n' % (os.path.dirname(image_name), ','.join(pred)))
-    #
-    # f_submit.close()
+    f_submit = open(os.path.join('submit_pre400.csv'), 'w')
+    f_submit.write('image,01_gengdi,02_yuandi,03_lindi,04_caodi,05_fangwujianzhu,06_road,07_gouzhuwu,08_rengong,09_huangmo,10_water\n')
+    for i, image_name in enumerate(test_image_list):
+        print(np.array(predictions).shape)
+        pred = ['%.6f' % p for p in predictions[i, :]]
+        if i % 100 == 0:
+            print('{} / {}'.format(i, 349))
+        f_submit.write('%s,%s\n' % (os.path.dirname(image_name), ','.join(pred)))
+
+    f_submit.close()
     from sklearn.metrics import confusion_matrix, classification_report
     from sklearn.preprocessing import OneHotEncoder
-
     test_image_classes = test_generator.classes
     # test_image_list.reshape(-1, 1)
     # np.expand_dims(test_image_list, -1)
@@ -463,16 +462,7 @@ if __name__ == '__main__':
     labels = []
     for i in test_image_classes:
         labels.append(i)
-
-    train_labels = []
-    train_image_classes = train_generator.classes
-    for i in train_image_classes:
-        train_labels.append(i)
-    train_preds = VGG16_model.predict_generator(train_generator, 2843)
-    train_ypre = []
-    for i, pre in enumerate(train_preds):
-        train_ypre.append(pre.argmax())
-
+    # np.reshape(labels, (349, 1))
 
     # one_hot = OneHotEncoder()
     # one_hot.fit(labels)
@@ -484,52 +474,14 @@ if __name__ == '__main__':
 
     print(y_pre[:3])
     print("The Confusion Matrix:")
+    print(confusion_matrix(labels, y_pre))
+    y_true = [0, 1, 2, 2, 2]
+    y_pred = [0, 0, 2, 2, 1]
+    target_names = ['class 0', 'class 1', 'class 2']
+    print(classification_report(y_true, y_pred, target_names=target_names))
 
-    # -*-coding:utf-8-*-
-    from sklearn.metrics import confusion_matrix
-    import matplotlib.pyplot as plt
-    import numpy as np
-
-    # y_true代表真实的label值 y_pred代表预测得到的lavel值
-    y_true = train_labels
-    y_pred = train_ypre
-
-    tick_marks = np.array(range(len(labels))) + 0.5
+    target_names = ObjectNames
+    print(classification_report(y_true=labels, y_pred=y_pre, target_names=target_names))
 
 
-    def plot_confusion_matrix(cm, title='Confusion Matrix', cmap=plt.cm.binary):
-        plt.imshow(cm, interpolation='nearest', cmap=cmap)
-        plt.title(title)
-        plt.colorbar()
-        xlocations = np.array(range(len(ObjectNames)))
-        plt.xticks(xlocations, ObjectNames, rotation=90)
-        plt.yticks(xlocations, ObjectNames)
-        plt.ylabel('True label')
-        plt.xlabel('Predicted label')
-
-
-    cm = confusion_matrix(y_true, y_pred)
-    np.set_printoptions(precision=2)
-    cm_normalized = cm.astype('float') / cm.sum(axis=1)[:, np.newaxis]
-    print(cm_normalized)
-    plt.figure(figsize=(12, 8), dpi=120)
-
-    ind_array = np.arange(len(ObjectNames))
-    x, y = np.meshgrid(ind_array, ind_array)
-
-    for x_val, y_val in zip(x.flatten(), y.flatten()):
-        c = cm_normalized[y_val][x_val]
-        if c > 0.01:
-            plt.text(x_val, y_val, "%0.2f" % (c,), color='red', fontsize=7, va='center', ha='center')
-    # offset the tick
-    plt.gca().set_xticks(tick_marks, minor=True)
-    plt.gca().set_yticks(tick_marks, minor=True)
-    plt.gca().xaxis.set_ticks_position('none')
-    plt.gca().yaxis.set_ticks_position('none')
-    plt.grid(True, which='minor', linestyle='-')
-    plt.gcf().subplots_adjust(bottom=0.15)
-
-    plot_confusion_matrix(cm_normalized, title='Normalized confusion matrix')
-    # show confusion matrix
-    plt.savefig('confusion_matrix_pre_200.png', format='png')
-    # plt.show()
+    print('Submission file successfully generated!')
