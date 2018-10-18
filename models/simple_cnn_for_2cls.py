@@ -5,7 +5,7 @@ import keras
 import matplotlib
 from keras import Input
 from keras.callbacks import ModelCheckpoint, EarlyStopping
-from keras.layers import Flatten, Dense, Conv2D, MaxPooling2D
+from keras.layers import Flatten, Dense, Conv2D, MaxPooling2D, GlobalAveragePooling2D, Dropout
 from keras.models import Model
 from keras.optimizers import SGD
 from override_image import ImageDataGenerator
@@ -20,15 +20,14 @@ learning_rate = 0.0001
 img_width = 256
 img_height = 256
 
-nbr_train_samples = 2843
-nbr_validation_samples = 349
+nbr_train_samples = 2835
+nbr_validation_samples = 353
 
 nbr_epochs = 800
 batch_size = 32
 img_channel = 3
 # n_classes = 21
 n_classes = 10
-
 
 # base_dir = '/media/files/xdm/classification/'
 # # model_dir = base_dir + 'weights/UCMerced_LandUse/'
@@ -42,20 +41,24 @@ train_data_dir = base_dir + 'data/NVDI_2cls_256/train'
 val_data_dir = base_dir + 'data/NVDI_2cls_256/val'
 test_data_dir = base_dir + 'data/NVDI_2cls_256/test'
 
-
 # # 共21类(影像中所有地物的名称)
 ObjectNames = ["zhibei", "no_zhibei"]
 
+
 def get_net(input_shape):
     input = Input(shape=input_shape)
-    x = Conv2D(filters=6, kernel_size=(5, 5), padding="valid", activation="tanh")(input)
+    x = Conv2D(filters=32, kernel_size=(3, 3), padding="valid", activation="relu")(input)
     x = MaxPooling2D(pool_size=(2, 2))(x)
-    x = Conv2D(filters=16, kernel_size=(5, 5), padding="valid", activation="tanh")(x)
+
+    x = Conv2D(filters=64, kernel_size=(3, 3), padding="valid", activation="relu")(x)
     x = MaxPooling2D(pool_size=(2, 2))(x)
+
+    x = Conv2D(filters=128, kernel_size=(3, 3), padding="valid", activation="relu")(x)
+    x = MaxPooling2D(pool_size=(2, 2))(x)
+    x = GlobalAveragePooling2D()(x)
+    x = Dropout(0.25)(x)
     x = Flatten()(x)
-    x = Dense(120, activation="tanh")(x)
-    x = Dense(84, activation="tanh")(x)
-    x = Dense(10, activation="softmax")(x)
+    x = Dense(10, activation="sigmoid")(x)
 
     model = Model(input, x)
     return model
@@ -106,7 +109,8 @@ if __name__ == '__main__':
     lenet_model = get_net(input_shape=(img_width, img_height, img_channel))
     lenet_model.summary()
     optimizer = SGD(lr=learning_rate, momentum=0.9, decay=0.001, nesterov=True)
-    lenet_model.compile(loss='categorical_crossentropy', optimizer=optimizer, metrics=['accuracy', keras.metrics.top_k_categorical_accuracy])
+    lenet_model.compile(loss='categorical_crossentropy', optimizer=optimizer,
+                        metrics=['accuracy', keras.metrics.top_k_categorical_accuracy])
 
     # 创建一个实例LossHistory
     history = LossHistory()
@@ -156,7 +160,6 @@ if __name__ == '__main__':
     begin = datetime.datetime.now()
     print('[{}] Creating and compiling model...'.format(str(datetime.datetime.now())))
 
-
     H = lenet_model.fit_generator(
         train_generator,
         samples_per_epoch=nbr_train_samples,
@@ -190,7 +193,7 @@ if __name__ == '__main__':
     print('Loading model and weights from training process ...')
 
     print('Begin to predict for testing data ...')
-    preds = lenet_model.predict_generator(test_generator, 349)
+    preds = lenet_model.predict_generator(test_generator, 353)
     print(preds)
     predictions = lenet_model.predict_generator(test_generator, steps=batch_size)
     print(lenet_model.metrics_names)  # ['loss', 'acc']
@@ -207,7 +210,7 @@ if __name__ == '__main__':
     train_image_classes = train_generator.classes
     for i in train_image_classes:
         train_labels.append(i)
-    train_preds = lenet_model.predict_generator(train_generator, 2843)
+    train_preds = lenet_model.predict_generator(train_generator, 2835)
     print(lenet_model.evaluate_generator(test_generator, batch_size),
           lenet_model.evaluate_generator(train_generator, batch_size))
     train_ypre = []
