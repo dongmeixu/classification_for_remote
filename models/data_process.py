@@ -162,9 +162,9 @@ def resize(source, img_size):
 # val = "/search/odin/xudongmei/data/process_imgsize400/val"
 # test = "/search/odin/xudongmei/data/process_imgsize400/test"
 
-total = "/search/odin/xudongmei/data/process_channel_change"
-train = "/search/odin/xudongmei/data/process_imgsize128/train"
-val = "/search/odin/xudongmei/data/process_imgsize128/val"
-test = "/search/odin/xudongmei/data/process_imgsize128/test"
+total = "/search/odin/xudongmei/data/NVDI_2cls"
+train = "/search/odin/xudongmei/data/NVDI_2cls_256/train"
+val = "/search/odin/xudongmei/data/NVDI_2cls_256/val"
+test = "/search/odin/xudongmei/data/NVDI_2cls_256/test"
 
 split_train_val_test(total, train, val, test, 0.1, 0.1)
