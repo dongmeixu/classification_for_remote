@@ -109,7 +109,7 @@ class LossHistory(keras.callbacks.Callback):
         plt.legend(loc="upper right")  # 设置图例显示位置
         # plt.show()
         plt.title("Training Loss and Accuracy on Satellite")
-        plt.savefig(model_dir + "2cls_256_{}_{}.png".format(batch_size, nbr_epochs))
+        plt.savefig(model_dir + "2cls_256_NDVI_{}_{}.png".format(batch_size, nbr_epochs))
 
 
 if __name__ == '__main__':
@@ -123,7 +123,7 @@ if __name__ == '__main__':
     history = LossHistory()
 
     # autosave best Model
-    best_model_file = model_dir + "2cls_256_weights.h5"
+    best_model_file = model_dir + "2cls_256_NDVI_weights.h5"
     best_model = ModelCheckpoint(best_model_file, monitor='val_acc', verbose=1, save_best_only=True)
     early_stop = EarlyStopping(monitor='val_loss', min_delta=0, patience=20, verbose=0, mode='auto')
 
@@ -152,7 +152,8 @@ if __name__ == '__main__':
         # save_to_dir = '/Users/pengpai/Desktop/python/DeepLearning/Kaggle/NCFM/data/visualization',
         # save_prefix = 'aug',
         classes=ObjectNames,
-        class_mode='categorical')
+        class_mode='categorical',
+        color_mode="grayscale")
 
     validation_generator = val_datagen.flow_from_directory(
         val_data_dir,
@@ -162,7 +163,8 @@ if __name__ == '__main__':
         # save_to_dir = '/Users/pengpai/Desktop/python/DeepLearning/Kaggle/NCFM/data/visulization',
         # save_prefix = 'aug',
         classes=ObjectNames,
-        class_mode='categorical')
+        class_mode='categorical',
+        color_mode="grayscale")
 
     begin = datetime.datetime.now()
     print('[{}] Creating and compiling model...'.format(str(datetime.datetime.now())))
@@ -276,5 +278,5 @@ if __name__ == '__main__':
 
     plot_confusion_matrix(cm_normalized, title='Normalized confusion matrix')
     # show confusion matrix
-    plt.savefig('confusion_matrix_2cls_256.png', format='png')
+    plt.savefig('confusion_matrix_2cls_256_NDVI.png', format='png')
     # plt.show()
