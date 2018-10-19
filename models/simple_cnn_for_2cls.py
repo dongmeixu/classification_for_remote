@@ -55,7 +55,6 @@ def get_net(input_shape):
 
     x = Conv2D(filters=128, kernel_size=(3, 3), padding="valid", activation="relu")(x)
     x = MaxPooling2D(pool_size=(2, 2))(x)
-    x = GlobalAveragePooling2D()(x)
     x = Dropout(0.25)(x)
     x = Flatten()(x)
     x = Dense(10, activation="sigmoid")(x)
@@ -145,7 +144,8 @@ if __name__ == '__main__':
         # save_to_dir = '/Users/pengpai/Desktop/python/DeepLearning/Kaggle/NCFM/data/visualization',
         # save_prefix = 'aug',
         classes=ObjectNames,
-        class_mode='categorical')
+        class_mode='categorical',
+        color_mode="gray")
 
     validation_generator = val_datagen.flow_from_directory(
         val_data_dir,
@@ -155,7 +155,8 @@ if __name__ == '__main__':
         # save_to_dir = '/Users/pengpai/Desktop/python/DeepLearning/Kaggle/NCFM/data/visulization',
         # save_prefix = 'aug',
         classes=ObjectNames,
-        class_mode='categorical')
+        class_mode='categorical',
+        color_mode="gray")
 
     begin = datetime.datetime.now()
     print('[{}] Creating and compiling model...'.format(str(datetime.datetime.now())))

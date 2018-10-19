@@ -8,7 +8,8 @@ import numpy as np
 import os
 import cv2
 
-# import tifffile as tiff
+import tifffile as tiff
+
 """
 2016年的原图是4通道的，而且蓝绿通道顺序反了
 
@@ -37,7 +38,7 @@ def remove_file(path):
             os.remove(os.path.join(path, file))
 
 
-img_size = 128
+img_size = 256
 
 
 # sys.path.append("/search/odin/yangyuran/program/Anaconda3/envs/tensorflow/lib/python3.6/site-packages/")
@@ -98,7 +99,10 @@ def split_train_val_test(root_total, root_train, root_val, root_test, val_ratio,
             source = os.path.join(root_total, name, img)
             target = os.path.join(root_train, name, img)
             # shutil.copy(source, target)
-            image_resize = resize(source, img_size)
+            image = cv2.imread(source, cv2.IMREAD_UNCHANGED)
+            image_resize = cv2.resize(image, (img_size, img_size))
+            image_resize = (image_resize[:, :, 3] - image_resize[:, :, 0]) / (
+                        image_resize[:, :, 3] + image_resize[:, :, 0] + 0.1)
             cv2.imwrite(target, image_resize)
             # np.save(target, image_resize)
             tmp_train += 1
@@ -109,7 +113,12 @@ def split_train_val_test(root_total, root_train, root_val, root_test, val_ratio,
             source = os.path.join(root_total, name, img)
             target = os.path.join(root_val, name, img)
             # shutil.copy(source, target)
-            image_resize = resize(source, img_size)
+            # image_resize = resize(source, img_size)
+
+            image = cv2.imread(source, cv2.IMREAD_UNCHANGED)
+            image_resize = cv2.resize(image, (img_size, img_size))
+            image_resize = (image_resize[:, :, 3] - image_resize[:, :, 0]) / (
+                        image_resize[:, :, 3] + image_resize[:, :, 0] + 0.1)
             cv2.imwrite(target, image_resize)
             # np.save(target, image_resize)
             tmp_val += 1
@@ -120,7 +129,11 @@ def split_train_val_test(root_total, root_train, root_val, root_test, val_ratio,
             source = os.path.join(root_total, name, img)
             target = os.path.join(root_test, name, img)
             # shutil.copy(source, target)
-            image_resize = resize(source, img_size)
+            # image_resize = resize(source, img_size)
+            image = cv2.imread(source, cv2.IMREAD_UNCHANGED)
+            image_resize = cv2.resize(image, (img_size, img_size))
+            image_resize = (image_resize[:, :, 3] - image_resize[:, :, 0]) / (
+                        image_resize[:, :, 3] + image_resize[:, :, 0] + 0.1)
             cv2.imwrite(target, image_resize)
             # np.save(target, image_resize)
             tmp_test += 1
@@ -147,10 +160,10 @@ def resize(source, img_size):
     return image_resize
 
 
-# total = r'D:\crop'
-# train = r'D:\crop\train'
-# val = r'D:\crop\val'
-# test = r'D:\crop\test'
+# total = r'F:\remote_sensing\2017_10\2cls'
+# train = r'F:\remote_sensing\2017_10\NDVI\train'
+# val = r'F:\remote_sensing\2017_10\NDVI\val'
+# test = r'F:\remote_sensing\2017_10\NDVI\test'
 
 # total = "/media/files/xdm/classification/data/process_1"
 # train = "/media/files/xdm/classification/data/process_imgsize400/train"
@@ -168,3 +181,5 @@ val = "/search/odin/xudongmei/data/NVDI_2cls_256/val"
 test = "/search/odin/xudongmei/data/NVDI_2cls_256/test"
 
 split_train_val_test(total, train, val, test, 0.1, 0.1)
+# image = tiff.imread(r"F:\remote_sensing\201702.TIF")
+# print(image.shape)
