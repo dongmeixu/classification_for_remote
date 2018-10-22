@@ -53,10 +53,10 @@ batch_size = 32
 img_channel = 3
 # n_classes = 21
 n_classes = 10
-
-base_dir = '/search/odin/xudongmei/'
-# model_dir = base_dir + 'weights/UCMerced_LandUse/'
-model_dir = base_dir + 'weights/new_10_classes/'
+#
+# base_dir = '/search/odin/xudongmei/'
+# # model_dir = base_dir + 'weights/UCMerced_LandUse/'
+# model_dir = base_dir + 'weights/new_10_classes/'
 
 # 定义训练集以及验证集的路径
 # train_data_dir = base_dir + 'data/UCMerced_LandUse/train_split'
@@ -65,8 +65,8 @@ model_dir = base_dir + 'weights/new_10_classes/'
 # val_data_dir = base_dir + 'data/2015_4_classes/aug_256/val_split'
 
 
-train_data_dir = base_dir + 'data/process_imgsize128/train'
-val_data_dir = base_dir + 'data/process_imgsize128/val'
+# train_data_dir = base_dir + 'data/process_imgsize128/train'
+# val_data_dir = base_dir + 'data/process_imgsize128/val'
 
 # # 共21类(影像中所有地物的名称)
 # ObjectNames = ['agricultural', 'airplane', 'baseballdiamond', 'beach',
@@ -81,14 +81,14 @@ val_data_dir = base_dir + 'data/process_imgsize128/val'
 ObjectNames = ['01_gengdi', '02_yuandi', '03_lindi', '04_caodi', '05_fangwujianzhu', '06_road', '07_gouzhuwu',
                '08_rengong', '09_huangmo', '10_water']
 
-# WEIGHTS_PATH = r'C:\Users\ASUS\Desktop\高分影像\pre_weights\vgg16_weights_tf_dim_ordering_tf_kernels.h5'
-# WEIGHTS_PATH_NO_TOP = r'C:\Users\ASUS\Desktop\高分影像\pre_weights\vgg16_weights_tf_dim_ordering_tf_kernels_notop.h5'
+WEIGHTS_PATH = r'C:\Users\ASUS\Desktop\高分影像\pre_weights\vgg16_weights_tf_dim_ordering_tf_kernels.h5'
+WEIGHTS_PATH_NO_TOP = r'C:\Users\ASUS\Desktop\高分影像\pre_weights\vgg16_weights_tf_dim_ordering_tf_kernels_notop.h5'
 
 # WEIGHTS_PATH = '/media/files/xdm/classification/pre_weights/vgg16_weights_tf_dim_ordering_tf_kernels.h5'
 # WEIGHTS_PATH_NO_TOP = '/media/files/xdm/classification/pre_weights/vgg16_weights_tf_dim_ordering_tf_kernels_notop.h5'
 
-WEIGHTS_PATH = '/search/odin/xudongmei/working/pre_weights/vgg16_weights_tf_dim_ordering_tf_kernels.h5'
-WEIGHTS_PATH_NO_TOP = '/search/odin/xudongmei/working/pre_weights/vgg16_weights_tf_dim_ordering_tf_kernels_notop.h5'
+# WEIGHTS_PATH = '/search/odin/xudongmei/working/pre_weights/vgg16_weights_tf_dim_ordering_tf_kernels.h5'
+# WEIGHTS_PATH_NO_TOP = '/search/odin/xudongmei/working/pre_weights/vgg16_weights_tf_dim_ordering_tf_kernels_notop.h5'
 
 """
 预训练vgg16 + 2个四向rnn
@@ -299,7 +299,7 @@ class LossHistory(keras.callbacks.Callback):
 
 if __name__ == '__main__':
     print('Loading VGG16 Weights ...')
-    VGG16_notop = VGG16(include_top=False, weights='imagenet',
+    VGG16_notop = VGG16(include_top=False, weights=None,
                         input_tensor=None, input_shape=(img_width, img_height, img_channel))
     # VGG16_notop.summary()
 
@@ -322,96 +322,98 @@ if __name__ == '__main__':
 
     VGG16_model = Model(VGG16_notop.input, output)
     VGG16_model.summary()
+    from keras.utils import plot_model
+    plot_model(VGG16_model, "cnn-BiLSTM.png")
 
-    optimizer = SGD(lr=learning_rate, momentum=0.9, decay=0.001, nesterov=True)
-    VGG16_model.compile(loss='categorical_crossentropy', optimizer=optimizer,
-                        metrics=['accuracy', "top_k_categorical_accuracy"])
-    # 创建一个实例LossHistory
-    history = LossHistory()
-
-    # autosave best Model
-    # best_model_file = model_dir + "VGG16_UCM_weights.h5"
-    # best_model_file = model_dir + "RVGG16_2015_4_classes_weights.h5"
-    best_model_file = model_dir + "RVGG16_10_cls_128_weights.h5"
-    best_model = ModelCheckpoint(best_model_file, monitor='val_acc', verbose=1, save_best_only=True)
-    early_stop = EarlyStopping(monitor='val_loss', min_delta=0, patience=10, verbose=0, mode='auto')
-
-    # this is the augmentation configuration we will use for training
-    train_datagen = ImageDataGenerator(
-        samplewise_center=True,  # 输入数据集去中心化，按feature执行
-        rescale=1. / 255,  # 重缩放因子
-        shear_range=0.1,  # 剪切强度（逆时针方向的剪切变换角度）
-        zoom_range=0.1,  # 随机缩放的幅度
-        rotation_range=10.,  # 图片随机转动的角度
-        width_shift_range=0.1,  # 图片水平偏移的幅度
-        height_shift_range=0.1,  # 图片竖直偏移的幅度
-        horizontal_flip=True,  # 进行随机水平翻转
-        vertical_flip=True,  # 进行随机竖直翻转
-    )
-
-    # this is the augmentation configuration we will use for validation:
-    # only rescaling
-    val_datagen = ImageDataGenerator(rescale=1. / 255)
-
-    train_generator = train_datagen.flow_from_directory(
-        train_data_dir,
-        target_size=(img_width, img_height),
-        batch_size=batch_size,
-        shuffle=True,
-        # save_to_dir = '/Users/pengpai/Desktop/python/DeepLearning/Kaggle/NCFM/data/visualization',
-        # save_prefix = 'aug',
-        classes=ObjectNames,
-        class_mode='categorical')
-
-    validation_generator = val_datagen.flow_from_directory(
-        val_data_dir,
-        target_size=(img_width, img_height),
-        batch_size=batch_size,
-        shuffle=True,
-        # save_to_dir = '/Users/pengpai/Desktop/python/DeepLearning/Kaggle/NCFM/data/visulization',
-        # save_prefix = 'aug',
-        classes=ObjectNames,
-        class_mode='categorical')
-
-    begin = datetime.datetime.now()
-    print('[{}] Creating and compiling model...'.format(str(datetime.datetime.now())))
-
-    # Model visualization
-    # from keras.utils.vis_utils import plot_model
-
-    # plot_model(VGG16_model, to_file=model_dir + 'RVGG16_UCM_{}_{}.png'.format(batch_size, nbr_epochs), show_shapes=True)
-    # plot_model(VGG16_model, to_file=model_dir + 'RVGG16_10_cls_400_model.png', show_shapes=True)
-
-    H = VGG16_model.fit_generator(
-        train_generator,
-        samples_per_epoch=nbr_train_samples,
-        nb_epoch=nbr_epochs,
-        validation_data=validation_generator,
-        nb_val_samples=nbr_validation_samples,
-        callbacks=[history, early_stop]
-    )
-    VGG16_model.save_weights(best_model_file)
-
-    # VGG16_model.save_weights(model_dir + 'my_10_cls_128_weights_pre.h5')
-
-    # plot the training loss and accuracy
-    # plt.figure()
-    # N = nbr_epochs
-    # plt.plot(np.arange(0, N), H.history["loss"], label="train_loss")
-    # plt.plot(np.arange(0, N), H.history["val_loss"], label="val_loss")
-    # plt.plot(np.arange(0, N), H.history["acc"], label="train_acc")
-    # plt.plot(np.arange(0, N), H.history["val_acc"], label="val_acc")
+    # optimizer = SGD(lr=learning_rate, momentum=0.9, decay=0.001, nesterov=True)
+    # VGG16_model.compile(loss='categorical_crossentropy', optimizer=optimizer,
+    #                     metrics=['accuracy', "top_k_categorical_accuracy"])
+    # # 创建一个实例LossHistory
+    # history = LossHistory()
     #
-    # plt.title("Training Loss and Accuracy on Satellite")
-    # plt.xlabel("Epoch #")
-    # plt.ylabel("Loss/Accuracy")
-    # plt.legend(loc="lower left")
-    # 存储图像，注意，必须在show之前savefig，否则存储的图片一片空白
-    # plt.savefig(model_dir + "VGG16_UCM_{}_{}.png".format(batch_size, nbr_epochs))
-    # plt.savefig(model_dir + "RVGG16_10_cls_128_pre_{}_{}.png".format(batch_size, nbr_epochs))
-    # # plt.show()
-    history.loss_plot('epoch')
-    print('[{}]Finishing training...'.format(str(datetime.datetime.now())))
-
-    end = datetime.datetime.now()
-    print("Total train time: ", end - begin)
+    # # autosave best Model
+    # # best_model_file = model_dir + "VGG16_UCM_weights.h5"
+    # # best_model_file = model_dir + "RVGG16_2015_4_classes_weights.h5"
+    # best_model_file = model_dir + "RVGG16_10_cls_128_weights.h5"
+    # best_model = ModelCheckpoint(best_model_file, monitor='val_acc', verbose=1, save_best_only=True)
+    # early_stop = EarlyStopping(monitor='val_loss', min_delta=0, patience=10, verbose=0, mode='auto')
+    #
+    # # this is the augmentation configuration we will use for training
+    # train_datagen = ImageDataGenerator(
+    #     samplewise_center=True,  # 输入数据集去中心化，按feature执行
+    #     rescale=1. / 255,  # 重缩放因子
+    #     shear_range=0.1,  # 剪切强度（逆时针方向的剪切变换角度）
+    #     zoom_range=0.1,  # 随机缩放的幅度
+    #     rotation_range=10.,  # 图片随机转动的角度
+    #     width_shift_range=0.1,  # 图片水平偏移的幅度
+    #     height_shift_range=0.1,  # 图片竖直偏移的幅度
+    #     horizontal_flip=True,  # 进行随机水平翻转
+    #     vertical_flip=True,  # 进行随机竖直翻转
+    # )
+    #
+    # # this is the augmentation configuration we will use for validation:
+    # # only rescaling
+    # val_datagen = ImageDataGenerator(rescale=1. / 255)
+    #
+    # train_generator = train_datagen.flow_from_directory(
+    #     train_data_dir,
+    #     target_size=(img_width, img_height),
+    #     batch_size=batch_size,
+    #     shuffle=True,
+    #     # save_to_dir = '/Users/pengpai/Desktop/python/DeepLearning/Kaggle/NCFM/data/visualization',
+    #     # save_prefix = 'aug',
+    #     classes=ObjectNames,
+    #     class_mode='categorical')
+    #
+    # validation_generator = val_datagen.flow_from_directory(
+    #     val_data_dir,
+    #     target_size=(img_width, img_height),
+    #     batch_size=batch_size,
+    #     shuffle=True,
+    #     # save_to_dir = '/Users/pengpai/Desktop/python/DeepLearning/Kaggle/NCFM/data/visulization',
+    #     # save_prefix = 'aug',
+    #     classes=ObjectNames,
+    #     class_mode='categorical')
+    #
+    # begin = datetime.datetime.now()
+    # print('[{}] Creating and compiling model...'.format(str(datetime.datetime.now())))
+    #
+    # # Model visualization
+    # # from keras.utils.vis_utils import plot_model
+    #
+    # # plot_model(VGG16_model, to_file=model_dir + 'RVGG16_UCM_{}_{}.png'.format(batch_size, nbr_epochs), show_shapes=True)
+    # # plot_model(VGG16_model, to_file=model_dir + 'RVGG16_10_cls_400_model.png', show_shapes=True)
+    #
+    # H = VGG16_model.fit_generator(
+    #     train_generator,
+    #     samples_per_epoch=nbr_train_samples,
+    #     nb_epoch=nbr_epochs,
+    #     validation_data=validation_generator,
+    #     nb_val_samples=nbr_validation_samples,
+    #     callbacks=[history, early_stop]
+    # )
+    # VGG16_model.save_weights(best_model_file)
+    #
+    # # VGG16_model.save_weights(model_dir + 'my_10_cls_128_weights_pre.h5')
+    #
+    # # plot the training loss and accuracy
+    # # plt.figure()
+    # # N = nbr_epochs
+    # # plt.plot(np.arange(0, N), H.history["loss"], label="train_loss")
+    # # plt.plot(np.arange(0, N), H.history["val_loss"], label="val_loss")
+    # # plt.plot(np.arange(0, N), H.history["acc"], label="train_acc")
+    # # plt.plot(np.arange(0, N), H.history["val_acc"], label="val_acc")
+    # #
+    # # plt.title("Training Loss and Accuracy on Satellite")
+    # # plt.xlabel("Epoch #")
+    # # plt.ylabel("Loss/Accuracy")
+    # # plt.legend(loc="lower left")
+    # # 存储图像，注意，必须在show之前savefig，否则存储的图片一片空白
+    # # plt.savefig(model_dir + "VGG16_UCM_{}_{}.png".format(batch_size, nbr_epochs))
+    # # plt.savefig(model_dir + "RVGG16_10_cls_128_pre_{}_{}.png".format(batch_size, nbr_epochs))
+    # # # plt.show()
+    # history.loss_plot('epoch')
+    # print('[{}]Finishing training...'.format(str(datetime.datetime.now())))
+    #
+    # end = datetime.datetime.now()
+    # print("Total train time: ", end - begin)

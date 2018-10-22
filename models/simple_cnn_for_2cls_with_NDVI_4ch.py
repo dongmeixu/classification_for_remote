@@ -18,10 +18,9 @@ import matplotlib
 from keras.utils import layer_utils
 
 matplotlib.use('Agg')
-import matplotlib.pyplot as plt
 
 # 指定GPU
-os.environ['CUDA_VISIBLE_DEVICES'] = '1'
+os.environ['CUDA_VISIBLE_DEVICES'] = '0'
 
 # 定义超参数
 learning_rate = 0.0001
@@ -45,9 +44,9 @@ base_dir = '/search/odin/xudongmei/'
 model_dir = base_dir + 'weights/new_10_classes/'
 
 # 定义训练集以及验证集的路径
-train_data_dir = base_dir + 'data/2cls_256/train'
-val_data_dir = base_dir + 'data/2cls_256/val'
-test_data_dir = base_dir + 'data/2cls_256/test'
+train_data_dir = base_dir + 'data/NVDI_2cls_256/train'
+val_data_dir = base_dir + 'data/NVDI_2cls_256/val'
+test_data_dir = base_dir + 'data/NVDI_2cls_256/test'
 
 # # 共21类(影像中所有地物的名称)
 ObjectNames = ["zhibei", "no_zhibei"]
@@ -57,18 +56,15 @@ def get_net(input_shape):
     input = Input(shape=input_shape)
     x = Conv2D(filters=32, kernel_size=(3, 3), padding="valid", activation="relu")(input)
     x = MaxPooling2D(pool_size=(2, 2))(x)
-    x = BatchNormalization()(x)
 
     x = Conv2D(filters=64, kernel_size=(3, 3), padding="valid", activation="relu")(x)
     x = MaxPooling2D(pool_size=(2, 2))(x)
-    x = BatchNormalization()(x)
 
     x = Conv2D(filters=128, kernel_size=(3, 3), padding="valid", activation="relu")(x)
     x = MaxPooling2D(pool_size=(2, 2))(x)
-    x = BatchNormalization()(x)
-    x = Dropout(0.5)(x)
+    x = Dropout(0.25)(x)
     x = Flatten()(x)
-    x = Dense(2, activation="sigmoid")(x)
+    x = Dense(10, activation="sigmoid")(x)
 
     model = Model(input, x)
 
@@ -76,12 +72,6 @@ def get_net(input_shape):
 
 
 class LossHistory(keras.callbacks.Callback):
-    def __init__(self):
-        self.losses = {'batch': [], 'epoch': []}
-        self.accuracy = {'batch': [], 'epoch': []}
-        self.val_loss = {'batch': [], 'epoch': []}
-        self.val_acc = {'batch': [], 'epoch': []}
-
     def on_train_begin(self, logs={}):
         self.losses = {'batch': [], 'epoch': []}
         self.accuracy = {'batch': [], 'epoch': []}
@@ -124,7 +114,6 @@ class LossHistory(keras.callbacks.Callback):
 
 if __name__ == '__main__':
     lenet_model = get_net(input_shape=(img_width, img_height, img_channel))
-    lenet_model.summary()
     optimizer = SGD(lr=learning_rate, momentum=0.9, decay=0.001, nesterov=True)
     lenet_model.compile(loss='categorical_crossentropy', optimizer=optimizer,
                         metrics=['accuracy', keras.metrics.top_k_categorical_accuracy])
@@ -133,9 +122,29 @@ if __name__ == '__main__':
     history = LossHistory()
 
     # autosave best Model
-    best_model_file = model_dir + "2cls_256_NDVI_weights.h5"
+    best_model_file = model_dir + "2cls_256_NDVI4ch_weights.h5"
     best_model = ModelCheckpoint(best_model_file, monitor='val_acc', verbose=1, save_best_only=True)
     early_stop = EarlyStopping(monitor='val_loss', min_delta=0, patience=20, verbose=0, mode='auto')
+
+    # 获取数据
+    train_imgs = os.listdir(train_data_dir)
+    for
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
     # this is the augmentation configuration we will use for training
     train_datagen = ImageDataGenerator(
@@ -206,8 +215,7 @@ if __name__ == '__main__':
         batch_size=batch_size,
         shuffle=False,  # Important !!!
         classes=ObjectNames,
-        class_mode='categorical',
-        color_mode="grayscale")
+        class_mode='categorical')
 
     test_image_list = test_generator.filenames
     print('Loading model and weights from training process ...')

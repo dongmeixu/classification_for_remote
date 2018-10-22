@@ -18,6 +18,7 @@ import matplotlib
 from keras.utils import layer_utils
 
 matplotlib.use('Agg')
+import matplotlib.pyplot as plt
 
 # 指定GPU
 os.environ['CUDA_VISIBLE_DEVICES'] = '0'
@@ -32,7 +33,7 @@ nbr_validation_samples = 353
 
 nbr_epochs = 800
 batch_size = 32
-img_channel = 1
+img_channel = 3
 # n_classes = 21
 n_classes = 2
 
@@ -56,15 +57,18 @@ def get_net(input_shape):
     input = Input(shape=input_shape)
     x = Conv2D(filters=32, kernel_size=(3, 3), padding="valid", activation="relu")(input)
     x = MaxPooling2D(pool_size=(2, 2))(x)
+    x = BatchNormalization()(x)
 
     x = Conv2D(filters=64, kernel_size=(3, 3), padding="valid", activation="relu")(x)
     x = MaxPooling2D(pool_size=(2, 2))(x)
+    x = BatchNormalization()(x)
 
     x = Conv2D(filters=128, kernel_size=(3, 3), padding="valid", activation="relu")(x)
     x = MaxPooling2D(pool_size=(2, 2))(x)
-    x = Dropout(0.25)(x)
+    x = BatchNormalization()(x)
+    x = Dropout(0.5)(x)
     x = Flatten()(x)
-    x = Dense(10, activation="sigmoid")(x)
+    x = Dense(2, activation="sigmoid")(x)
 
     model = Model(input, x)
 
@@ -72,6 +76,13 @@ def get_net(input_shape):
 
 
 class LossHistory(keras.callbacks.Callback):
+    def __init__(self):
+
+        self.losses = {'batch': [], 'epoch': []}
+        self.accuracy = {'batch': [], 'epoch': []}
+        self.val_loss = {'batch': [], 'epoch': []}
+        self.val_acc = {'batch': [], 'epoch': []}
+
     def on_train_begin(self, logs={}):
         self.losses = {'batch': [], 'epoch': []}
         self.accuracy = {'batch': [], 'epoch': []}

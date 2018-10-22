@@ -8,8 +8,6 @@ import numpy as np
 import os
 import cv2
 
-import tifffile as tiff
-
 """
 2016年的原图是4通道的，而且蓝绿通道顺序反了
 
@@ -132,7 +130,7 @@ def split_train_val_test(root_total, root_train, root_val, root_test, val_ratio,
             # image_resize = resize(source, img_size)
             image = cv2.imread(source, cv2.IMREAD_UNCHANGED)
             image_resize = cv2.resize(image, (img_size, img_size))
-            image_resize = (image_resize[:, :, 3] - image_resize[:, :, 0]) / (
+            image_resize[:, :, 3] = (image_resize[:, :, 3] - image_resize[:, :, 0]) / (
                         image_resize[:, :, 3] + image_resize[:, :, 0] + 0.1)
             cv2.imwrite(target, image_resize)
             # np.save(target, image_resize)
@@ -175,10 +173,10 @@ def resize(source, img_size):
 # val = "/search/odin/xudongmei/data/process_imgsize400/val"
 # test = "/search/odin/xudongmei/data/process_imgsize400/test"
 
-total = "/search/odin/xudongmei/data/NVDI_2cls"
-train = "/search/odin/xudongmei/data/NVDI_2cls_256/train"
-val = "/search/odin/xudongmei/data/NVDI_2cls_256/val"
-test = "/search/odin/xudongmei/data/NVDI_2cls_256/test"
+total = "/search/odin/xudongmei/data/2cls"
+train = "/search/odin/xudongmei/data/2cls_256_4channels/train"
+val = "/search/odin/xudongmei/data/2cls_256_4channels/val"
+test = "/search/odin/xudongmei/data/2cls_256_4channels/test"
 
 split_train_val_test(total, train, val, test, 0.1, 0.1)
 # image = tiff.imread(r"F:\remote_sensing\201702.TIF")

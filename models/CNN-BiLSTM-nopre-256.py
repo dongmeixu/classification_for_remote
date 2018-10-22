@@ -257,6 +257,13 @@ def VGG16(include_top=True, weights='imagenet',
 
 
 class LossHistory(keras.callbacks.Callback):
+    def __init__(self):
+        super().__init__()
+        self.losses = {'batch': [], 'epoch': []}
+        self.accuracy = {'batch': [], 'epoch': []}
+        self.val_loss = {'batch': [], 'epoch': []}
+        self.val_acc = {'batch': [], 'epoch': []}
+
     def on_train_begin(self, logs={}):
         self.losses = {'batch': [], 'epoch': []}
         self.accuracy = {'batch': [], 'epoch': []}
