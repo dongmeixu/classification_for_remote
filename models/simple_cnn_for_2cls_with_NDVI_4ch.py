@@ -1,4 +1,6 @@
 import datetime
+import random
+import threading
 
 import keras
 from keras import layers, Input
@@ -16,9 +18,12 @@ from override_image import ImageDataGenerator
 import numpy as np
 import matplotlib
 from keras.utils import layer_utils
+from collections import Iterator
 
 matplotlib.use('Agg')
+import matplotlib.pyplot as plt
 
+import cv2
 # 指定GPU
 os.environ['CUDA_VISIBLE_DEVICES'] = '0'
 
@@ -32,7 +37,7 @@ nbr_validation_samples = 353
 
 nbr_epochs = 800
 batch_size = 32
-img_channel = 1
+img_channel = 4   # RGB+NDVI
 # n_classes = 21
 n_classes = 2
 
@@ -44,9 +49,9 @@ base_dir = '/search/odin/xudongmei/'
 model_dir = base_dir + 'weights/new_10_classes/'
 
 # 定义训练集以及验证集的路径
-train_data_dir = base_dir + 'data/NVDI_2cls_256/train'
-val_data_dir = base_dir + 'data/NVDI_2cls_256/val'
-test_data_dir = base_dir + 'data/NVDI_2cls_256/test'
+train_data_dir = base_dir + 'data/2cls_256_4channels/train'
+val_data_dir = base_dir + 'data/2cls_256_4channels/val'
+test_data_dir = base_dir + 'data/2cls_256_4channels/test'
 
 # # 共21类(影像中所有地物的名称)
 ObjectNames = ["zhibei", "no_zhibei"]
@@ -109,10 +114,104 @@ class LossHistory(keras.callbacks.Callback):
         plt.legend(loc="upper right")  # 设置图例显示位置
         # plt.show()
         plt.title("Training Loss and Accuracy on Satellite")
-        plt.savefig(model_dir + "2cls_256_NDVI_{}_{}.png".format(batch_size, nbr_epochs))
+        plt.savefig(model_dir + "2cls_256_NDVI_4channel{}_{}.png".format(batch_size, nbr_epochs))
+
+
+def flip_axis(x, axis):
+    x = np.asarray(x).swapaxes(axis, 0)
+    x = x[::-1, ...]
+    x = x.swapaxes(0, axis)
+    return x
+
+
+def form_batch(X, y, batch_size):
+    X_batch = np.zeros((batch_size, img_width, img_height, img_channel))
+    y_batch = np.zeros((batch_size, img_width, img_height, n_classes))
+    X_height = X.shape[1]
+    X_width = X.shape[2]
+
+    for i in range(batch_size):
+        random_width = random.randint(0, X_width - img_width - 1)
+        random_height = random.randint(0, X_height - img_height - 1)
+
+        random_image = random.randint(0, X.shape[0] - 1)
+
+        y_batch[i] = y[random_image, random_height: random_height + img_width, random_width: random_width + img_height, :]
+        X_batch[i] = np.array(
+            X[random_image, random_height: random_height + img_width, random_width: random_width + img_height, :])
+    return X_batch, y_batch
+
+
+class threadsafe_iter(Iterator):
+    """Takes an iterator/generator and makes it thread-safe by
+    serializing call to the `next` method of given iterator/generator.
+    """
+
+    def __init__(self, it):
+        self.it = it
+        self.lock = threading.Lock()
+
+    def __iter__(self):
+        return self
+
+    def __next__(self):
+        with self.lock:
+            return self.it.__next__()
+
+
+def threadsafe_generator(f):
+    """A decorator that takes a generator function and makes it thread-safe.
+    """
+
+    def g(*a, **kw):
+        return threadsafe_iter(f(*a, **kw))
+
+    return g
+
+
+@threadsafe_generator
+def batch_generator(X, y, batch_size, horizontal_flip=False, vertical_flip=False, swap_axis=False):
+    while True:
+        X_batch, y_batch = form_batch(X, y, batch_size)
+        # print("X_batch.shape",X_batch.shape)#X_batch.shape (128, 16, 112, 112)  tensorflow  X_batch.shape (16, 112, 112, 3)
+        # print("y_batch.shape", y_batch.shape)#y_batch.shape (128, 1, 112, 112)  tensorflow  y_batch.shape (16, 112, 112, 1)
+
+        for i in range(X_batch.shape[0]):
+            xb = X_batch[i]
+            yb = y_batch[i]
+            # print("xb.shape", xb.shape)#xb.shape (16, 112, 112)  tensorflow xb.shape (112, 112, 3)
+            # print("yb.shape", yb.shape)#yb.shape (1, 112, 112)    tensorflow   yb.shape (112, 112, 1)
+            if horizontal_flip:
+                if np.random.random() < 0.5:
+                    xb = np.transpose(xb, (2, 0, 1))
+                    yb = np.transpose(yb, (2, 0, 1))
+                    xb = flip_axis(xb, 1)
+                    yb = flip_axis(yb, 1)
+                    xb = np.transpose(xb, (1, 2, 0))
+                    yb = np.transpose(yb, (1, 2, 0))
+
+            if vertical_flip:
+                if np.random.random() < 0.5:
+                    xb = np.transpose(xb, (2, 0, 1))
+                    yb = np.transpose(yb, (2, 0, 1))
+                    xb = flip_axis(xb, 2)
+                    yb = flip_axis(yb, 2)
+                    xb = np.transpose(xb, (1, 2, 0))
+                    yb = np.transpose(yb, (1, 2, 0))
+
+            if swap_axis:
+                if np.random.random() < 0.5:
+                    xb = xb.swapaxes(0, 1)
+                    yb = yb.swapaxes(0, 1)
+
+            X_batch[i] = xb
+            y_batch[i] = yb
+        # print("yield")
+        yield X_batch, y_batch[:,  16:16 + img_height - 32, 16:16 + img_width - 32, :]  # y_batch((128, 1, 80, 80))
 
 
 if __name__ == '__main__':
+    begin = datetime.datetime.now()
     lenet_model = get_net(input_shape=(img_width, img_height, img_channel))
     optimizer = SGD(lr=learning_rate, momentum=0.9, decay=0.001, nesterov=True)
     lenet_model.compile(loss='categorical_crossentropy', optimizer=optimizer,
@@ -127,75 +226,48 @@ if __name__ == '__main__':
     early_stop = EarlyStopping(monitor='val_loss', min_delta=0, patience=20, verbose=0, mode='auto')
 
     # 获取数据
-    train_imgs = os.listdir(train_data_dir)
-    for
+    x_train = np.zeros(shape=(nbr_train_samples, img_height, img_width, img_channel))
+    y_train = np.zeros(shape=(nbr_train_samples, 1))
 
+    train_lists = os.listdir(train_data_dir)
+    i = 0
 
+    for label, dir in enumerate(train_lists):
+        img_list = os.path.join(train_data_dir, dir)
+        for img in img_list:
+            x_train[i, :, :, :] = cv2.imread(os.path.join(train_data_dir, dir, img))
+            y_train[i, :] = label
+            i += 1
+    y_train = keras.utils.to_categorical(y_train, n_classes)
+    print("x_train: ", x_train.shape)
+    print("y_train: ", y_train.shape)
 
+    x_val = np.zeros(shape=(nbr_validation_samples, img_height, img_width, img_channel))
+    y_val = np.zeros(shape=(nbr_validation_samples, 1))
 
+    val_lists = os.listdir(val_data_dir)
+    i = 0
 
+    for lable, dir in enumerate(val_lists):
+        img_list = os.path.join(val_data_dir, dir)
+        for img in img_list:
+            x_val[i, :, :, :] = cv2.imread(os.path.join(val_data_dir, dir, img))
+            y_val[i, :] = lable
+            i += 1
+    y_val = keras.utils.to_categorical(y_train, n_classes)
+    print("x_val: ", x_val.shape)
+    print("y_val: ", y_val.shape)
 
-
-
-
-
-
-
-
-
-
-
-
-    # this is the augmentation configuration we will use for training
-    train_datagen = ImageDataGenerator(
-        samplewise_center=True,  # 输入数据集去中心化，按feature执行
-        rescale=1. / 255,  # 重缩放因子
-        shear_range=0.1,  # 剪切强度（逆时针方向的剪切变换角度）
-        zoom_range=0.1,  # 随机缩放的幅度
-        rotation_range=10.,  # 图片随机转动的角度
-        width_shift_range=0.1,  # 图片水平偏移的幅度
-        height_shift_range=0.1,  # 图片竖直偏移的幅度
-        horizontal_flip=True,  # 进行随机水平翻转
-        vertical_flip=True,  # 进行随机竖直翻转
-    )
-
-    # this is the augmentation configuration we will use for validation:
-    # only rescaling
-    val_datagen = ImageDataGenerator(rescale=1. / 255)
-
-    train_generator = train_datagen.flow_from_directory(
-        train_data_dir,
-        target_size=(img_width, img_height),
-        batch_size=batch_size,
-        shuffle=True,
-        # save_to_dir = '/Users/pengpai/Desktop/python/DeepLearning/Kaggle/NCFM/data/visualization',
-        # save_prefix = 'aug',
-        classes=ObjectNames,
-        class_mode='categorical',
-        color_mode="grayscale")
-
-    validation_generator = val_datagen.flow_from_directory(
-        val_data_dir,
-        target_size=(img_width, img_height),
-        batch_size=batch_size,
-        shuffle=True,
-        # save_to_dir = '/Users/pengpai/Desktop/python/DeepLearning/Kaggle/NCFM/data/visulization',
-        # save_prefix = 'aug',
-        classes=ObjectNames,
-        class_mode='categorical',
-        color_mode="grayscale")
-
-    begin = datetime.datetime.now()
-    print('[{}] Creating and compiling model...'.format(str(datetime.datetime.now())))
-
-    H = lenet_model.fit_generator(
-        train_generator,
-        samples_per_epoch=nbr_train_samples,
+    lenet_model.fit_generator(
+        batch_generator(x_train, y_train, batch_size, horizontal_flip=True, vertical_flip=True, swap_axis=True),
         nb_epoch=nbr_epochs,
-        validation_data=validation_generator,
-        nb_val_samples=nbr_validation_samples,
-        callbacks=[history, early_stop]
+        samples_per_epoch=nbr_train_samples // batch_size,
+        validation_data=batch_generator(x_val, y_val, batch_size, horizontal_flip=True, vertical_flip=True, swap_axis=True),
+        validation_steps=nbr_validation_samples // batch_size,
+        callbacks=[history, early_stop],
+        nb_worker=8
     )
+
     lenet_model.save_weights(best_model_file)
 
     history.loss_plot('epoch')
@@ -203,99 +275,99 @@ if __name__ == '__main__':
 
     end = datetime.datetime.now()
     print("Total train time: ", end - begin)
-
-    lenet_model.load_weights(best_model_file)
-
-    # test data generator for prediction
-    test_datagen = ImageDataGenerator(rescale=1. / 255)
-
-    test_generator = test_datagen.flow_from_directory(
-        test_data_dir,
-        target_size=(img_width, img_height),
-        batch_size=batch_size,
-        shuffle=False,  # Important !!!
-        classes=ObjectNames,
-        class_mode='categorical')
-
-    test_image_list = test_generator.filenames
-    print('Loading model and weights from training process ...')
-
-    print('Begin to predict for testing data ...')
-    preds = lenet_model.predict_generator(test_generator, 353)
-    print(preds)
-    predictions = lenet_model.predict_generator(test_generator, steps=batch_size)
-    print(lenet_model.metrics_names)  # ['loss', 'acc']
-
-    test_image_classes = test_generator.classes
-    # test_image_list.reshape(-1, 1)
-    # np.expand_dims(test_image_list, -1)
-    # print(test_image_list.shape)
-    labels = []
-    for i in test_image_classes:
-        labels.append(i)
-
-    train_labels = []
-    train_image_classes = train_generator.classes
-    for i in train_image_classes:
-        train_labels.append(i)
-    train_preds = lenet_model.predict_generator(train_generator, 2835)
-    print(lenet_model.evaluate_generator(test_generator, batch_size),
-          lenet_model.evaluate_generator(train_generator, batch_size))
-    train_ypre = []
-    for i, pre in enumerate(train_preds):
-        train_ypre.append(pre.argmax())
-
-    y_pre = []
-    for i, pre in enumerate(predictions):
-        y_pre.append(pre.argmax())
-
-    print("The Confusion Matrix:")
-
-    # -*-coding:utf-8-*-
-    from sklearn.metrics import confusion_matrix
-    import matplotlib.pyplot as plt
-    import numpy as np
-
-    # y_true代表真实的label值 y_pred代表预测得到的lavel值
-    y_true = train_labels
-    y_pred = train_ypre
-
-    tick_marks = np.array(range(len(labels))) + 0.5
-
-
-    def plot_confusion_matrix(cm, title='Confusion Matrix', cmap=plt.cm.binary):
-        plt.imshow(cm, interpolation='nearest', cmap=cmap)
-        plt.title(title)
-        plt.colorbar()
-        xlocations = np.array(range(len(ObjectNames)))
-        plt.xticks(xlocations, ObjectNames, rotation=90)
-        plt.yticks(xlocations, ObjectNames)
-        plt.ylabel('True label')
-        plt.xlabel('Predicted label')
-
-
-    cm = confusion_matrix(y_true, y_pred)
-    np.set_printoptions(precision=2)
-    cm_normalized = cm.astype('float') / cm.sum(axis=1)[:, np.newaxis]
-    print(cm_normalized)
-    plt.figure(figsize=(12, 8), dpi=120)
-
-    ind_array = np.arange(len(ObjectNames))
-    x, y = np.meshgrid(ind_array, ind_array)
-
-    for x_val, y_val in zip(x.flatten(), y.flatten()):
-        c = cm_normalized[y_val][x_val]
-        if c > 0.01:
-            plt.text(x_val, y_val, "%0.2f" % (c,), color='red', fontsize=7, va='center', ha='center')
-    # offset the tick
-    plt.gca().set_xticks(tick_marks, minor=True)
-    plt.gca().set_yticks(tick_marks, minor=True)
-    plt.gca().xaxis.set_ticks_position('none')
-    plt.gca().yaxis.set_ticks_position('none')
-    plt.grid(True, which='minor', linestyle='-')
-    plt.gcf().subplots_adjust(bottom=0.15)
-
-    plot_confusion_matrix(cm_normalized, title='Normalized confusion matrix')
-    # show confusion matrix
-    plt.savefig('confusion_matrix_2cls_256_NDVI.png', format='png')
-    # plt.show()
+    #
+    # lenet_model.load_weights(best_model_file)
+    #
+    # # test data generator for prediction
+    # test_datagen = ImageDataGenerator(rescale=1. / 255)
+    #
+    # test_generator = test_datagen.flow_from_directory(
+    #     test_data_dir,
+    #     target_size=(img_width, img_height),
+    #     batch_size=batch_size,
+    #     shuffle=False,  # Important !!!
+    #     classes=ObjectNames,
+    #     class_mode='categorical')
+    #
+    # test_image_list = test_generator.filenames
+    # print('Loading model and weights from training process ...')
+    #
+    # print('Begin to predict for testing data ...')
+    # preds = lenet_model.predict_generator(test_generator, 353)
+    # print(preds)
+    # predictions = lenet_model.predict_generator(test_generator, steps=batch_size)
+    # print(lenet_model.metrics_names)  # ['loss', 'acc']
+    #
+    # test_image_classes = test_generator.classes
+    # # test_image_list.reshape(-1, 1)
+    # # np.expand_dims(test_image_list, -1)
+    # # print(test_image_list.shape)
+    # labels = []
+    # for i in test_image_classes:
+    #     labels.append(i)
+    #
+    # train_labels = []
+    # train_image_classes = train_generator.classes
+    # for i in train_image_classes:
+    #     train_labels.append(i)
+    # train_preds = lenet_model.predict_generator(train_generator, 2835)
+    # print(lenet_model.evaluate_generator(test_generator, batch_size),
+    #       lenet_model.evaluate_generator(train_generator, batch_size))
+    # train_ypre = []
+    # for i, pre in enumerate(train_preds):
+    #     train_ypre.append(pre.argmax())
+    #
+    # y_pre = []
+    # for i, pre in enumerate(predictions):
+    #     y_pre.append(pre.argmax())
+    #
+    # print("The Confusion Matrix:")
+    #
+    # # -*-coding:utf-8-*-
+    # from sklearn.metrics import confusion_matrix
+    # import matplotlib.pyplot as plt
+    # import numpy as np
+    #
+    # # y_true代表真实的label值 y_pred代表预测得到的lavel值
+    # y_true = train_labels
+    # y_pred = train_ypre
+    #
+    # tick_marks = np.array(range(len(labels))) + 0.5
+    #
+    #
+    # def plot_confusion_matrix(cm, title='Confusion Matrix', cmap=plt.cm.binary):
+    #     plt.imshow(cm, interpolation='nearest', cmap=cmap)
+    #     plt.title(title)
+    #     plt.colorbar()
+    #     xlocations = np.array(range(len(ObjectNames)))
+    #     plt.xticks(xlocations, ObjectNames, rotation=90)
+    #     plt.yticks(xlocations, ObjectNames)
+    #     plt.ylabel('True label')
+    #     plt.xlabel('Predicted label')
+    #
+    #
+    # cm = confusion_matrix(y_true, y_pred)
+    # np.set_printoptions(precision=2)
+    # cm_normalized = cm.astype('float') / cm.sum(axis=1)[:, np.newaxis]
+    # print(cm_normalized)
+    # plt.figure(figsize=(12, 8), dpi=120)
+    #
+    # ind_array = np.arange(len(ObjectNames))
+    # x, y = np.meshgrid(ind_array, ind_array)
+    #
+    # for x_val, y_val in zip(x.flatten(), y.flatten()):
+    #     c = cm_normalized[y_val][x_val]
+    #     if c > 0.01:
+    #         plt.text(x_val, y_val, "%0.2f" % (c,), color='red', fontsize=7, va='center', ha='center')
+    # # offset the tick
+    # plt.gca().set_xticks(tick_marks, minor=True)
+    # plt.gca().set_yticks(tick_marks, minor=True)
+    # plt.gca().xaxis.set_ticks_position('none')
+    # plt.gca().yaxis.set_ticks_position('none')
+    # plt.grid(True, which='minor', linestyle='-')
+    # plt.gcf().subplots_adjust(bottom=0.15)
+    #
+    # plot_confusion_matrix(cm_normalized, title='Normalized confusion matrix')
+    # # show confusion matrix
+    # plt.savefig('confusion_matrix_2cls_256_NDVI.png', format='png')
+    # # plt.show()
