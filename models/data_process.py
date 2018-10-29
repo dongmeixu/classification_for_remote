@@ -98,7 +98,8 @@ def split_train_val_test(root_total, root_train, root_val, root_test, val_ratio,
             target = os.path.join(root_train, name, img)
             # shutil.copy(source, target)
             image = cv2.imread(source, cv2.IMREAD_UNCHANGED)
-            image_resize = cv2.resize(image, (img_size, img_size))
+            # image_resize = cv2.resize(image, (img_size, img_size))
+            image_resize = image
             image_resize = (image_resize[:, :, 3] - image_resize[:, :, 0]) / (
                         image_resize[:, :, 3] + image_resize[:, :, 0] + 0.1)
             cv2.imwrite(target, image_resize)
@@ -114,7 +115,8 @@ def split_train_val_test(root_total, root_train, root_val, root_test, val_ratio,
             # image_resize = resize(source, img_size)
 
             image = cv2.imread(source, cv2.IMREAD_UNCHANGED)
-            image_resize = cv2.resize(image, (img_size, img_size))
+            # image_resize = cv2.resize(image, (img_size, img_size))
+            image_resize = image
             image_resize = (image_resize[:, :, 3] - image_resize[:, :, 0]) / (
                         image_resize[:, :, 3] + image_resize[:, :, 0] + 0.1)
             cv2.imwrite(target, image_resize)
@@ -129,7 +131,8 @@ def split_train_val_test(root_total, root_train, root_val, root_test, val_ratio,
             # shutil.copy(source, target)
             # image_resize = resize(source, img_size)
             image = cv2.imread(source, cv2.IMREAD_UNCHANGED)
-            image_resize = cv2.resize(image, (img_size, img_size))
+            # image_resize = cv2.resize(image, (img_size, img_size))
+            image_resize = image
             image_resize[:, :, 3] = (image_resize[:, :, 3] - image_resize[:, :, 0]) / (
                         image_resize[:, :, 3] + image_resize[:, :, 0] + 0.1)
             cv2.imwrite(target, image_resize)
@@ -174,9 +177,9 @@ def resize(source, img_size):
 # test = "/search/odin/xudongmei/data/process_imgsize400/test"
 
 total = "/search/odin/xudongmei/data/2cls"
-train = "/search/odin/xudongmei/data/2cls_256_4channels/train"
-val = "/search/odin/xudongmei/data/2cls_256_4channels/val"
-test = "/search/odin/xudongmei/data/2cls_256_4channels/test"
+train = "/search/odin/xudongmei/data/2cls_huafen/train"
+val = "/search/odin/xudongmei/data/2cls_huafen/val"
+test = "/search/odin/xudongmei/data/2cls_huafen/test"
 
 split_train_val_test(total, train, val, test, 0.1, 0.1)
 # image = tiff.imread(r"F:\remote_sensing\201702.TIF")

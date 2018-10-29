@@ -1,6 +1,7 @@
 from __future__ import print_function
 from __future__ import absolute_import
 
+import cv2
 import threading
 
 import keras
@@ -24,6 +25,7 @@ from override_image import ImageDataGenerator
 import numpy as np
 import matplotlib
 from keras.utils import layer_utils
+from sklearn.preprocessing import OneHotEncoder
 
 matplotlib.use('Agg')
 import matplotlib.pyplot as plt
@@ -67,7 +69,7 @@ model_dir = base_dir + 'weights/new_10_classes/'
 
 train_data_dir = base_dir + 'data/process_imgsize256/train'
 val_data_dir = base_dir + 'data/process_imgsize256/val'
-
+test_data_dir = base_dir + 'data/process_imgsize256/test'
 # # 共21类(影像中所有地物的名称)
 # ObjectNames = ['agricultural', 'airplane', 'baseballdiamond', 'beach',
 #                'buildings', 'chaparral', 'denseresidential', 'forest',
@@ -381,36 +383,227 @@ if __name__ == '__main__':
 
     # plot_model(VGG16_model, to_file=model_dir + 'RVGG16_UCM_{}_{}.png'.format(batch_size, nbr_epochs), show_shapes=True)
     # plot_model(VGG16_model, to_file=model_dir + 'RVGG16_10_cls_400_model.png', show_shapes=True)
-
-    H = VGG16_model.fit_generator(
-        train_generator,
-        samples_per_epoch=nbr_train_samples,
-        nb_epoch=nbr_epochs,
-        validation_data=validation_generator,
-        nb_val_samples=nbr_validation_samples,
-        callbacks=[history, early_stop]
-    )
-
-    # VGG16_model.save_weights(model_dir + 'my_10_cls_128_weights_pre.h5')
-
-    # plot the training loss and accuracy
-    # plt.figure()
-    # N = nbr_epochs
-    # plt.plot(np.arange(0, N), H.history["loss"], label="train_loss")
-    # plt.plot(np.arange(0, N), H.history["val_loss"], label="val_loss")
-    # plt.plot(np.arange(0, N), H.history["acc"], label="train_acc")
-    # plt.plot(np.arange(0, N), H.history["val_acc"], label="val_acc")
     #
-    # plt.title("Training Loss and Accuracy on Satellite")
-    # plt.xlabel("Epoch #")
-    # plt.ylabel("Loss/Accuracy")
-    # plt.legend(loc="lower left")
-    # 存储图像，注意，必须在show之前savefig，否则存储的图片一片空白
-    # plt.savefig(model_dir + "VGG16_UCM_{}_{}.png".format(batch_size, nbr_epochs))
-    # plt.savefig(model_dir + "RVGG16_10_cls_128_pre_{}_{}.png".format(batch_size, nbr_epochs))
-    # # plt.show()
-    history.loss_plot('epoch')
-    print('[{}]Finishing training...'.format(str(datetime.datetime.now())))
+    # H = VGG16_model.fit_generator(
+    #     train_generator,
+    #     samples_per_epoch=nbr_train_samples,
+    #     nb_epoch=nbr_epochs,
+    #     validation_data=validation_generator,
+    #     nb_val_samples=nbr_validation_samples,
+    #     callbacks=[history, early_stop]
+    # )
+    #
+    # # VGG16_model.save_weights(model_dir + 'my_10_cls_128_weights_pre.h5')
+    #
+    # # plot the training loss and accuracy
+    # # plt.figure()
+    # # N = nbr_epochs
+    # # plt.plot(np.arange(0, N), H.history["loss"], label="train_loss")
+    # # plt.plot(np.arange(0, N), H.history["val_loss"], label="val_loss")
+    # # plt.plot(np.arange(0, N), H.history["acc"], label="train_acc")
+    # # plt.plot(np.arange(0, N), H.history["val_acc"], label="val_acc")
+    # #
+    # # plt.title("Training Loss and Accuracy on Satellite")
+    # # plt.xlabel("Epoch #")
+    # # plt.ylabel("Loss/Accuracy")
+    # # plt.legend(loc="lower left")
+    # # 存储图像，注意，必须在show之前savefig，否则存储的图片一片空白
+    # # plt.savefig(model_dir + "VGG16_UCM_{}_{}.png".format(batch_size, nbr_epochs))
+    # # plt.savefig(model_dir + "RVGG16_10_cls_128_pre_{}_{}.png".format(batch_size, nbr_epochs))
+    # # # plt.show()
+    # history.loss_plot('epoch')
+    # print('[{}]Finishing training...'.format(str(datetime.datetime.now())))
+    #
+    # end = datetime.datetime.now()
+    # print("Total train time: ", end - begin)
 
-    end = datetime.datetime.now()
-    print("Total train time: ", end - begin)
+    # 获取数据
+    # x_train = np.zeros(shape=(nbr_train_samples, img_height, img_width, img_channel))
+    # y_train = np.zeros(shape=(nbr_train_samples, 1))
+    #
+    # train_lists = os.listdir(train_data_dir)
+    # i = 0
+    #
+    # import sklearn.preprocessing.label
+    # for label, dir in enumerate(train_lists):
+    #     img_list = os.path.join(train_data_dir, dir)
+    #     for img in img_list:
+    #         x_train[i, :, :, :] = cv2.imread(os.path.join(train_data_dir, dir, img))
+    #         y_train[i, :] = label
+    #         i += 1
+    # # y_train = keras.utils.to_categorical(y_train, n_classes)
+    # enc = OneHotEncoder()
+    # enc.fit(y_train)
+    #
+    # # one-hot编码的结果是比较奇怪的，最好是先转换成二维数组
+    # y_train = enc.transform(y_train).toarray()
+    # print("x_train: ", x_train.shape)
+    # print("y_train: ", y_train.shape)
+    #
+    # x_val = np.zeros(shape=(nbr_validation_samples, img_height, img_width, img_channel))
+    # y_val = np.zeros(shape=(nbr_validation_samples, 1))
+    #
+    # val_lists = os.listdir(val_data_dir)
+    # i = 0
+    #
+    # for lable, dir in enumerate(val_lists):
+    #     img_list = os.path.join(val_data_dir, dir)
+    #     print(lable)
+    #     for img in img_list:
+    #         x_val[i, :, :, :] = cv2.imread(os.path.join(val_data_dir, dir, img))
+    #         y_val[i, :] = lable
+    #         i += 1
+    # # y_val = keras.utils.to_categorical(y_val, n_classes)
+    # enc = OneHotEncoder()
+    # enc.fit(y_val)
+    #
+    # # one-hot编码的结果是比较奇怪的，最好是先转换成二维数组
+    # y_val = enc.transform(y_val).toarray()
+    # print("x_val: ", x_val.shape)
+    # print("y_val: ", y_val.shape)
+    #
+    # VGG16_model.fit_generator(
+    #     train_generator(x_train, y_train, batch_size, horizontal_flip=True, vertical_flip=True, swap_axis=True),
+    #     nb_epoch=nbr_epochs,
+    #     samples_per_epoch=nbr_train_samples // batch_size,
+    #     validation_data=validation_generator(x_val, y_val, batch_size, horizontal_flip=True, vertical_flip=True, swap_axis=True),
+    #     validation_steps=nbr_validation_samples // batch_size,
+    #     callbacks=[history, early_stop],
+    #     nb_worker=8
+    # )
+
+    # VGG16_model.save_weights(best_model_file)
+    #
+    # history.loss_plot('epoch')
+    # print('[{}]Finishing training...'.format(str(datetime.datetime.now())))
+    #
+    # end = datetime.datetime.now()
+    # print("Total train time: ", end - begin)
+
+    VGG16_model.load_weights(best_model_file)
+    x_test = np.zeros(shape=(nbr_validation_samples, img_height, img_width, img_channel))
+    y_test = np.zeros(shape=(nbr_validation_samples, 1))
+
+    test_lists = os.listdir(test_data_dir)
+    i = 0
+
+    for lable, dir in enumerate(test_lists):
+        img_list = os.path.join(test_data_dir, dir)
+        print(img_list)
+        for img in os.listdir(img_list):
+            print(os.path.join(test_data_dir, dir, img))
+            tmp = os.path.join(test_data_dir, dir, img)
+            x_test[i, :, :, :] = cv2.imread(os.path.join(test_data_dir, dir, img))
+            y_test[i, :] = lable
+            i += 1
+    # y_val = keras.utils.to_categorical(y_val, n_classes)
+    enc = OneHotEncoder()
+    enc.fit(y_test)
+
+    # one-hot编码的结果是比较奇怪的，最好是先转换成二维数组
+    y = enc.transform(y_test).toarray()
+    print("x_test: ", x_test.shape)
+    print("y_test: ", y.shape)
+    print(VGG16_model.evaluate(x_test, y))
+
+    #
+    # # test data generator for prediction
+    # test_datagen = ImageDataGenerator(rescale=1. / 255)
+    #
+    # test_generator = test_datagen.flow_from_directory(
+    #     test_data_dir,
+    #     target_size=(img_width, img_height),
+    #     batch_size=batch_size,
+    #     shuffle=False,  # Important !!!
+    #     classes=ObjectNames,
+    #     class_mode='categorical')
+    #
+    # test_image_list = test_generator.filenames
+    # print('Loading model and weights from training process ...')
+    #
+    # print('Begin to predict for testing data ...')
+    # preds = lenet_model.predict_generator(test_generator, 353)
+    # print(preds)
+    # predictions = lenet_model.predict_generator(test_generator, steps=batch_size)
+    # print(lenet_model.metrics_names)  # ['loss', 'acc']
+    #
+    # test_image_classes = test_generator.classes
+    # # test_image_list.reshape(-1, 1)
+    # # np.expand_dims(test_image_list, -1)
+    # # print(test_image_list.shape)
+    # labels = []
+    # for i in test_image_classes:
+    #     labels.append(i)
+    #
+    # train_labels = []
+    # train_image_classes = train_generator.classes
+    # for i in train_image_classes:
+    #     train_labels.append(i)
+    # train_preds = lenet_model.predict_generator(train_generator, 2835)
+    # print(lenet_model.evaluate_generator(test_generator, batch_size),
+    #       lenet_model.evaluate_generator(train_generator, batch_size))
+    # train_ypre = []
+    # for i, pre in enumerate(train_preds):
+    #     train_ypre.append(pre.argmax())
+    #
+    # y_pre = []
+    # for i, pre in enumerate(predictions):
+    #     y_pre.append(pre.argmax())
+    #
+    # print("The Confusion Matrix:")
+    #
+    # # -*-coding:utf-8-*-
+    from sklearn.metrics import confusion_matrix
+    import matplotlib.pyplot as plt
+    import numpy as np
+
+    train_preds = VGG16_model.predict(x_test)
+    train_ypre = []
+    for i, pre in enumerate(train_preds):
+        train_ypre.append(pre.argmax())
+
+    # y_true代表真实的label值 y_pred代表预测得到的lavel值
+    y_true = y_test
+    y_pred = train_ypre
+    print(y_true)
+    print("---")
+    print(y_pred)
+    tick_marks = np.array(range(len([0, 1]))) + 0.5
+
+
+    def plot_confusion_matrix(cm, title='Confusion Matrix', cmap=plt.cm.binary):
+        plt.imshow(cm, interpolation='nearest', cmap=cmap)
+        plt.title(title)
+        plt.colorbar()
+        xlocations = np.array(range(len(ObjectNames)))
+        plt.xticks(xlocations, ObjectNames, rotation=90)
+        plt.yticks(xlocations, ObjectNames)
+        plt.ylabel('True label')
+        plt.xlabel('Predicted label')
+
+
+    cm = confusion_matrix(y_true, y_pred)
+    np.set_printoptions(precision=2)
+    cm_normalized = cm.astype('float') / cm.sum(axis=1)[:, np.newaxis]
+    print(cm_normalized)
+    plt.figure(figsize=(12, 8), dpi=120)
+
+    ind_array = np.arange(len(ObjectNames))
+    x, y = np.meshgrid(ind_array, ind_array)
+
+    for x_val, y_val in zip(x.flatten(), y.flatten()):
+        c = cm_normalized[y_val][x_val]
+        if c > 0.01:
+            plt.text(x_val, y_val, "%0.2f" % (c,), color='red', fontsize=7, va='center', ha='center')
+    # offset the tick
+    plt.gca().set_xticks(tick_marks, minor=True)
+    plt.gca().set_yticks(tick_marks, minor=True)
+    plt.gca().xaxis.set_ticks_position('none')
+    plt.gca().yaxis.set_ticks_position('none')
+    plt.grid(True, which='minor', linestyle='-')
+    plt.gcf().subplots_adjust(bottom=0.15)
+
+    plot_confusion_matrix(cm_normalized, title='Normalized confusion matrix')
+    # show confusion matrix
+    plt.savefig('confusion_matrix_256_cnnbiltsm.png', format='png')
+    # plt.show()
