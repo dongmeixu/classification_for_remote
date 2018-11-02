@@ -410,7 +410,7 @@ if __name__ == '__main__':
 
     print('Begin to predict for testing data ...')
     preds = VGG16_model.predict_generator(test_generator, 349)
-    print(preds)
+    # print(preds)
     predictions = VGG16_model.predict_generator(test_generator, steps=batch_size)
     print(VGG16_model.metrics_names)  # ['loss', 'acc']
     # print(predictions)  # [1.0047961547970772, 0.6640625]
@@ -419,13 +419,17 @@ if __name__ == '__main__':
 
     print('Begin to write submission file ..')
     f_submit = open(os.path.join('submitVGG16.csv'), 'w')
-    f_submit.write('image,01_gengdi,02_yuandi,03_lindi,04_caodi,05_fangwujianzhu,06_road,07_gouzhuwu,08_rengong,09_huangmo,10_water\n')
+    # f_submit.write('image,01_gengdi,02_yuandi,03_lindi,04_caodi,05_fangwujianzhu,06_road,07_gouzhuwu,08_rengong,09_huangmo,10_water\n')
+
+    f_submit.write('image,pre\n')
     for i, image_name in enumerate(test_image_list):
         print(np.array(predictions).shape)
         pred = ['%.6f' % p for p in predictions[i, :]]
+        pred = np.argmax(pred)
+        print(pred)
         if i % 100 == 0:
             print('{} / {}'.format(i, 349))
-        f_submit.write('%s,%s\n' % (os.path.dirname(image_name), ','.join(pred)))
+        f_submit.write('%s,%d\n' % (os.path.dirname(image_name), pred))
 
     f_submit.close()
     from sklearn.metrics import confusion_matrix, classification_report
