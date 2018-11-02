@@ -24,7 +24,6 @@ from keras.utils import layer_utils
 matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 
-
 # 指定GPU
 os.environ['CUDA_VISIBLE_DEVICES'] = '0'
 
@@ -42,7 +41,6 @@ img_channel = 3
 # n_classes = 21
 n_classes = 10
 
-
 # base_dir = '/media/files/xdm/classification/'
 # # model_dir = base_dir + 'weights/UCMerced_LandUse/'
 # model_dir = base_dir + 'weights/new_10_classes/'
@@ -58,7 +56,6 @@ model_dir = base_dir + 'weights/new_10_classes/'
 train_data_dir = base_dir + 'data/process_imgsize256/train'
 val_data_dir = base_dir + 'data/process_imgsize256/val'
 test_data_dir = base_dir + 'data/process_imgsize256/test'
-
 
 # # 共21类(影像中所有地物的名称)
 # ObjectNames = ['agricultural', 'airplane', 'baseballdiamond', 'beach',
@@ -243,6 +240,7 @@ def VGG16(include_top=True, weights='imagenet',
 
     return model
 
+
 class LossHistory(keras.callbacks.Callback):
     def on_train_begin(self, logs={}):
         self.losses = {'batch': [], 'epoch': []}
@@ -301,7 +299,8 @@ if __name__ == '__main__':
     VGG16_model.summary()
 
     optimizer = SGD(lr=learning_rate, momentum=0.9, decay=0.001, nesterov=True)
-    VGG16_model.compile(loss='categorical_crossentropy', optimizer=optimizer, metrics=['accuracy', keras.metrics.top_k_categorical_accuracy])
+    VGG16_model.compile(loss='categorical_crossentropy', optimizer=optimizer,
+                        metrics=['accuracy', keras.metrics.top_k_categorical_accuracy])
 
     # 创建一个实例LossHistory
     history = LossHistory()
@@ -359,15 +358,15 @@ if __name__ == '__main__':
     # plot_model(VGG16_model, to_file=model_dir + 'RVGG16_UCM_{}_{}.png'.format(batch_size, nbr_epochs), show_shapes=True)
     # plot_model(VGG16_model, to_file=model_dir + 'RVGG16_10_cls_400_model.png', show_shapes=True)
 
-    H = VGG16_model.fit_generator(
-        train_generator,
-        samples_per_epoch=nbr_train_samples,
-        nb_epoch=nbr_epochs,
-        validation_data=validation_generator,
-        nb_val_samples=nbr_validation_samples,
-        callbacks=[history, early_stop]
-    )
-    VGG16_model.save_weights(best_model_file)
+    # H = VGG16_model.fit_generator(
+    #     train_generator,
+    #     samples_per_epoch=nbr_train_samples,
+    #     nb_epoch=nbr_epochs,
+    #     validation_data=validation_generator,
+    #     nb_val_samples=nbr_validation_samples,
+    #     callbacks=[history, early_stop]
+    # )
+    # VGG16_model.save_weights(best_model_file)
 
     # VGG16_model.save_weights(model_dir + 'my_10_cls_128_weights_pre.h5')
 
@@ -387,7 +386,7 @@ if __name__ == '__main__':
     # plt.savefig(model_dir + "VGG16_UCM_{}_{}.png".format(batch_size, nbr_epochs))
     # plt.savefig(model_dir + "RVGG16_10_cls_128_pre_{}_{}.png".format(batch_size, nbr_epochs))
     # # plt.show()
-    history.loss_plot('epoch')
+    # history.loss_plot('epoch')
     print('[{}]Finishing training...'.format(str(datetime.datetime.now())))
 
     end = datetime.datetime.now()
@@ -418,17 +417,17 @@ if __name__ == '__main__':
 
     # np.savetxt(os.path.join('predictions_pre200.txt'), predictions)
 
-    # print('Begin to write submission file ..')
-    # f_submit = open(os.path.join('submit_pre200.csv'), 'w')
-    # f_submit.write('image,01_gengdi,02_yuandi,03_lindi,04_caodi,05_fangwujianzhu,06_road,07_gouzhuwu,08_rengong,09_huangmo,10_water\n')
-    # for i, image_name in enumerate(test_image_list):
-    #     print(np.array(predictions).shape)
-    #     pred = ['%.6f' % p for p in predictions[i, :]]
-    #     if i % 100 == 0:
-    #         print('{} / {}'.format(i, 349))
-    #     f_submit.write('%s,%s\n' % (os.path.dirname(image_name), ','.join(pred)))
-    #
-    # f_submit.close()
+    print('Begin to write submission file ..')
+    f_submit = open(os.path.join('submitVGG16.csv'), 'w')
+    f_submit.write('image,01_gengdi,02_yuandi,03_lindi,04_caodi,05_fangwujianzhu,06_road,07_gouzhuwu,08_rengong,09_huangmo,10_water\n')
+    for i, image_name in enumerate(test_image_list):
+        print(np.array(predictions).shape)
+        pred = ['%.6f' % p for p in predictions[i, :]]
+        if i % 100 == 0:
+            print('{} / {}'.format(i, 349))
+        f_submit.write('%s,%s\n' % (os.path.dirname(image_name), ','.join(pred)))
+
+    f_submit.close()
     from sklearn.metrics import confusion_matrix, classification_report
     from sklearn.preprocessing import OneHotEncoder
 
@@ -445,69 +444,70 @@ if __name__ == '__main__':
     for i in train_image_classes:
         train_labels.append(i)
     train_preds = VGG16_model.predict_generator(train_generator, 2843)
-    print(VGG16_model.evaluate_generator(test_generator, batch_size),
-          VGG16_model.evaluate_generator(train_generator, batch_size))
-    # train_ypre = []
-    # for i, pre in enumerate(train_preds):
-    #     train_ypre.append(pre.argmax())
-    #
-    #
-    # # one_hot = OneHotEncoder()
-    # # one_hot.fit(labels)
-    # # labels = one_hot.transform(labels)
-    # print(predictions.shape)
-    # y_pre = []
-    # for i, pre in enumerate(predictions):
-    #     y_pre.append(pre.argmax())
-    #
-    # print(y_pre[:3])
-    # print("The Confusion Matrix:")
-    #
-    # # -*-coding:utf-8-*-
-    # from sklearn.metrics import confusion_matrix
-    # import matplotlib.pyplot as plt
-    # import numpy as np
-    #
-    # # y_true代表真实的label值 y_pred代表预测得到的lavel值
+    print(VGG16_model.evaluate_generator(test_generator, batch_size))
+    train_ypre = []
+    for i, pre in enumerate(train_preds):
+        train_ypre.append(pre.argmax())
+
+    # one_hot = OneHotEncoder()
+    # one_hot.fit(labels)
+    # labels = one_hot.transform(labels)
+    print(predictions.shape)
+    y_pre = []
+    for i, pre in enumerate(predictions):
+        y_pre.append(pre.argmax())
+
+    print("The Confusion Matrix:")
+    print(confusion_matrix(labels, y_pre))
+
+    # -*-coding:utf-8-*-
+    from sklearn.metrics import confusion_matrix
+    import matplotlib.pyplot as plt
+    import numpy as np
+
+    # y_true代表真实的label值 y_pred代表预测得到的lavel值
     # y_true = train_labels
     # y_pred = train_ypre
-    #
-    # tick_marks = np.array(range(len(labels))) + 0.5
-    #
-    #
-    # def plot_confusion_matrix(cm, title='Confusion Matrix', cmap=plt.cm.binary):
-    #     plt.imshow(cm, interpolation='nearest', cmap=cmap)
-    #     plt.title(title)
-    #     plt.colorbar()
-    #     xlocations = np.array(range(len(ObjectNames)))
-    #     plt.xticks(xlocations, ObjectNames, rotation=90)
-    #     plt.yticks(xlocations, ObjectNames)
-    #     plt.ylabel('True label')
-    #     plt.xlabel('Predicted label')
-    #
-    #
+    y_true = labels
+    y_pred = y_pre
+
+    tick_marks = np.array(range(len(labels))) + 0.5
+
+
+    def plot_confusion_matrix(cm, title='Confusion Matrix', cmap=plt.cm.binary):
+        plt.imshow(cm, interpolation='nearest', cmap=cmap)
+        plt.title(title)
+        plt.colorbar()
+        xlocations = np.array(range(len(ObjectNames)))
+        plt.xticks(xlocations, ObjectNames, rotation=90)
+        plt.yticks(xlocations, ObjectNames)
+        plt.ylabel('True label')
+        plt.xlabel('Predicted label')
+
+
+    cm = confusion_matrix(y_true, y_pred)
     # cm = confusion_matrix(y_true, y_pred)
-    # np.set_printoptions(precision=2)
-    # cm_normalized = cm.astype('float') / cm.sum(axis=1)[:, np.newaxis]
-    # print(cm_normalized)
-    # plt.figure(figsize=(12, 8), dpi=120)
-    #
-    # ind_array = np.arange(len(ObjectNames))
-    # x, y = np.meshgrid(ind_array, ind_array)
-    #
-    # for x_val, y_val in zip(x.flatten(), y.flatten()):
-    #     c = cm_normalized[y_val][x_val]
-    #     if c > 0.01:
-    #         plt.text(x_val, y_val, "%0.2f" % (c,), color='red', fontsize=7, va='center', ha='center')
-    # # offset the tick
-    # plt.gca().set_xticks(tick_marks, minor=True)
-    # plt.gca().set_yticks(tick_marks, minor=True)
-    # plt.gca().xaxis.set_ticks_position('none')
-    # plt.gca().yaxis.set_ticks_position('none')
-    # plt.grid(True, which='minor', linestyle='-')
-    # plt.gcf().subplots_adjust(bottom=0.15)
-    #
-    # plot_confusion_matrix(cm_normalized, title='Normalized confusion matrix')
-    # # show confusion matrix
-    # plt.savefig('confusion_matrix_pre_200.png', format='png')
-    # # plt.show()
+    np.set_printoptions(precision=2)
+    cm_normalized = cm.astype('float') / cm.sum(axis=1)[:, np.newaxis]
+    print(cm_normalized)
+    plt.figure(figsize=(12, 8), dpi=120)
+
+    ind_array = np.arange(len(ObjectNames))
+    x, y = np.meshgrid(ind_array, ind_array)
+
+    for x_val, y_val in zip(x.flatten(), y.flatten()):
+        c = cm_normalized[y_val][x_val]
+        if c > 0.01:
+            plt.text(x_val, y_val, "%0.2f" % (c,), color='red', fontsize=7, va='center', ha='center')
+    # offset the tick
+    plt.gca().set_xticks(tick_marks, minor=True)
+    plt.gca().set_yticks(tick_marks, minor=True)
+    plt.gca().xaxis.set_ticks_position('none')
+    plt.gca().yaxis.set_ticks_position('none')
+    plt.grid(True, which='minor', linestyle='-')
+    plt.gcf().subplots_adjust(bottom=0.15)
+
+    plot_confusion_matrix(cm, title='VGG16-confusion matrix')
+    # show confusion matrix
+    plt.savefig('confusion_matrix_VGG16.png', format='png')
+    # plt.show()

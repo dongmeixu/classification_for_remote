@@ -242,7 +242,7 @@ if __name__ == '__main__':
     enc.fit(y_train)
 
     # one-hot编码的结果是比较奇怪的，最好是先转换成二维数组
-    y_train = enc.transform(y_train).toarray()
+    y_train1 = enc.transform(y_train).toarray()
     print("x_train: ", x_train.shape)
     print("y_train: ", y_train.shape)
 
@@ -268,19 +268,19 @@ if __name__ == '__main__':
     print("x_val: ", x_val.shape)
     print("y_val: ", y_val.shape)
 
-    lenet_model.fit_generator(
-        batch_generator(x_train, y_train, batch_size, horizontal_flip=True, vertical_flip=True, swap_axis=True),
-        nb_epoch=nbr_epochs,
-        samples_per_epoch=nbr_train_samples // batch_size,
-        validation_data=batch_generator(x_val, y_val, batch_size, horizontal_flip=True, vertical_flip=True, swap_axis=True),
-        validation_steps=nbr_validation_samples // batch_size,
-        callbacks=[history, early_stop],
-        nb_worker=8
-    )
-
-    lenet_model.save_weights(best_model_file)
-
-    history.loss_plot('epoch')
+    # lenet_model.fit_generator(
+    #     batch_generator(x_train, y_train, batch_size, horizontal_flip=True, vertical_flip=True, swap_axis=True),
+    #     nb_epoch=nbr_epochs,
+    #     samples_per_epoch=nbr_train_samples // batch_size,
+    #     validation_data=batch_generator(x_val, y_val, batch_size, horizontal_flip=True, vertical_flip=True, swap_axis=True),
+    #     validation_steps=nbr_validation_samples // batch_size,
+    #     callbacks=[history, early_stop],
+    #     nb_worker=8
+    # )
+    #
+    # lenet_model.save_weights(best_model_file)
+    #
+    # history.loss_plot('epoch')
     print('[{}]Finishing training...'.format(str(datetime.datetime.now())))
 
     end = datetime.datetime.now()
@@ -360,13 +360,13 @@ if __name__ == '__main__':
     import matplotlib.pyplot as plt
     import numpy as np
 
-    train_preds = lenet_model.predict(x_test)
+    train_preds = lenet_model.predict(x_train)
     train_ypre = []
     for i, pre in enumerate(train_preds):
         train_ypre.append(pre.argmax())
 
     # y_true代表真实的label值 y_pred代表预测得到的lavel值
-    y_true = y_test
+    y_true = y_train
     y_pred = train_ypre
     print(y_true)
     print("---")
@@ -406,7 +406,12 @@ if __name__ == '__main__':
     plt.grid(True, which='minor', linestyle='-')
     plt.gcf().subplots_adjust(bottom=0.15)
 
-    plot_confusion_matrix(cm_normalized, title='Normalized confusion matrix')
+    # plot_confusion_matrix(cm_normalized, title='Normalized confusion matrix')
+    # # show confusion matrix
+    # plt.savefig('confusion_matrix_2cls_256_NDVI4cj.png', format='png')
+    # # plt.show()
+
+    plot_confusion_matrix(cm_normalized, title='CNN-BiLSTM confusion matrix')
     # show confusion matrix
-    plt.savefig('confusion_matrix_2cls_256_NDVI4cj.png', format='png')
+    plt.savefig('confusion_matrix_CNN-BiLSTM.png', format='png')
     # plt.show()

@@ -41,7 +41,7 @@ nbr_validation_samples = 349
 
 nbr_epochs = 800
 batch_size = 32
-img_channel = 4   # RGB+NDVI
+img_channel = 3   # RGB+NDVI
 # n_classes = 21
 n_classes = 10
 
@@ -53,9 +53,9 @@ base_dir = '/search/odin/xudongmei/'
 model_dir = base_dir + 'weights/new_10_classes/'
 
 # 定义训练集以及验证集的路径
-train_data_dir = base_dir + 'data/10cls_256_4channels/train'
-val_data_dir = base_dir + 'data/10cls_256_4channels/val'
-test_data_dir = base_dir + 'data/10cls_256_4channels/test'
+train_data_dir = base_dir + 'data/process_imgsize256/train'
+val_data_dir = base_dir + 'data/process_imgsize256/val'
+test_data_dir = base_dir + 'data/process_imgsize256/test'
 
 # ObjectNames = ['building', 'other', 'water', 'zhibei']
 ObjectNames = ['01_gengdi', '02_yuandi', '03_lindi', '04_caodi', '05_fangwujianzhu', '06_road', '07_gouzhuwu',
@@ -394,7 +394,7 @@ if __name__ == '__main__':
     VGG16_model.compile(loss='categorical_crossentropy', optimizer=optimizer,
                         metrics=['accuracy', "top_k_categorical_accuracy"])
     # 创建一个实例LossHistory
-    history = LossHistory()
+    # history = LossHistory()
 
     # autosave best Model
     # best_model_file = model_dir + "VGG16_UCM_weights.h5"
@@ -421,7 +421,7 @@ if __name__ == '__main__':
     enc.fit(y_train)
 
     # one-hot编码的结果是比较奇怪的，最好是先转换成二维数组
-    y_train = enc.transform(y_train).toarray()
+    y_train1 = enc.transform(y_train).toarray()
     print("x_train: ", x_train.shape)
     print("y_train: ", y_train.shape)
 
@@ -433,8 +433,8 @@ if __name__ == '__main__':
 
     for lable, dir in enumerate(val_lists):
         img_list = os.path.join(val_data_dir, dir)
-        print(lable)
-        for img in img_list:
+
+        for img in os.listdir(img_list):
             x_val[i, :, :, :] = cv2.imread(os.path.join(val_data_dir, dir, img))
             y_val[i, :] = lable
             i += 1
@@ -447,19 +447,19 @@ if __name__ == '__main__':
     print("x_val: ", x_val.shape)
     print("y_val: ", y_val.shape)
 
-    VGG16_model.fit_generator(
-        batch_generator(x_train, y_train, batch_size, horizontal_flip=True, vertical_flip=True, swap_axis=True),
-        nb_epoch=nbr_epochs,
-        samples_per_epoch=nbr_train_samples // batch_size,
-        validation_data=batch_generator(x_val, y_val, batch_size, horizontal_flip=True, vertical_flip=True, swap_axis=True),
-        validation_steps=nbr_validation_samples // batch_size,
-        callbacks=[history, early_stop],
-        nb_worker=8
-    )
+    # VGG16_model.fit_generator(
+    #     batch_generator(x_train, y_train, batch_size, horizontal_flip=True, vertical_flip=True, swap_axis=True),
+    #     nb_epoch=nbr_epochs,
+    #     samples_per_epoch=nbr_train_samples // batch_size,
+    #     validation_data=batch_generator(x_val, y_val, batch_size, horizontal_flip=True, vertical_flip=True, swap_axis=True),
+    #     validation_steps=nbr_validation_samples // batch_size,
+    #     callbacks=[history, early_stop],
+    #     nb_worker=8
+    # )
+    #
+    # VGG16_model.save_weights(best_model_file)
 
-    VGG16_model.save_weights(best_model_file)
-
-    history.loss_plot('epoch')
+    # history.loss_plot('epoch')
     print('[{}]Finishing training...'.format(str(datetime.datetime.now())))
 
     end = datetime.datetime.now()
@@ -474,7 +474,7 @@ if __name__ == '__main__':
 
     for lable, dir in enumerate(test_lists):
         img_list = os.path.join(test_data_dir, dir)
-        for img in img_list:
+        for img in os.listdir(img_list):
             x_test[i, :, :, :] = cv2.imread(os.path.join(test_data_dir, dir, img))
             y_test[i, :] = lable
             i += 1
@@ -484,9 +484,6 @@ if __name__ == '__main__':
 
     # one-hot编码的结果是比较奇怪的，最好是先转换成二维数组
     y = enc.transform(y_test).toarray()
-    print("x_test: ", x_test.shape)
-    print("y_test: ", y.shape)
-    print(VGG16_model.evaluate(x_test, y))
 
     #
     # # test data generator for prediction
@@ -539,17 +536,14 @@ if __name__ == '__main__':
     import matplotlib.pyplot as plt
     import numpy as np
 
-    train_preds = VGG16_model.predict(x_test)
+    train_preds = VGG16_model.predict(x_train)
     train_ypre = []
     for i, pre in enumerate(train_preds):
         train_ypre.append(pre.argmax())
 
     # y_true代表真实的label值 y_pred代表预测得到的lavel值
-    y_true = y_test
+    y_true = y_train
     y_pred = train_ypre
-    print(y_true)
-    print("---")
-    print(y_pred)
     tick_marks = np.array(range(len([0, 1]))) + 0.5
 
 
@@ -565,6 +559,9 @@ if __name__ == '__main__':
 
 
     cm = confusion_matrix(y_true, y_pred)
+    print(cm)
+    plot_confusion_matrix(cm, title='VGG16-BiLSTM confusion matrix')
+    plt.savefig('confusion_matrix_VGG16-BiLSTM.png', format='png')
     np.set_printoptions(precision=2)
     cm_normalized = cm.astype('float') / cm.sum(axis=1)[:, np.newaxis]
     print(cm_normalized)
